@@ -1,74 +1,48 @@
-A full stack framework for the Google App Engine -based
-=======================================================
+timecard-gae
+============
 
-Let's finish the work quickly and go TAP BEER!
+Set up
+------
 
-Features
---------
+::
 
-Supports:
+  $ git clone https://github.com/MiCHiLU/timecard-gae.git
+  $ cd timecard-gae
+  $ bundle install
+  $ npm install
+  $ mkvirtualenv --python=`which ptyhon2.7` timecard-gae
+  (timecard-gae)$ pip install -r packages.txt
 
-- Google App Engine / Python 2.7
+Build and Test
+--------------
 
-  - Appstats
-  - NDB Asynchronous Operation
-  - Python Module Configuration
+::
 
-- Google Analytics for feature phone
-- I18N / Python, HTML and JavaScript
-- Japanese han-kaku characters / 半角
-- generating sitemaps
+  (timecard-gae)$ make
 
-Low cost operating:
+Run development server
+----------------------
 
-- Google Drive Spreadsheets as a database / Google Visualization API
-- hosting DropBox as a proxy
-- hostname-based multitenancy
-- just a few costs permanent caching
-- redirecting to Google URL Shortener
+::
 
-Performance:
+  (timecard-gae)$ make runserver
 
-- pre-compiling templates
-- uglify-js
+then access to:
 
-Coding:
+- admin server: http://localhost:8000
+- instance server: http://localhost:8080/
 
-- CoffeeScript
-- HAML
-- SASS / compass
+Deploy
+------
 
-Development:
+::
 
-- AngularJS
-- Jinja2
-- Twitter bootstrap
-- webapp2
+  (timecard-gae)$ make deploy
 
-- file system event-based automation building on Mac OS X 10.7+
+Dependencies
+------------
 
-Testing:
-
-- coverage of tests
-- py.test
-- testacular
-
-Utils:
-
-- CORS
-- CSRF
-- HMAC
-- e-mail reports of errors
-- fanstatic
-- handling taskqueue
-- managing cache records
-- memoize
-- ring buffer
-- token bucket
-
-LICENSE
--------
-
-Licensed under the terms of the MIT.
-
-Copyright (c) 2013 ENDOH takanao
+- Bundler
+- GNU Make
+- Python 2.7
+- npm

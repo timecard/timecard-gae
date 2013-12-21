@@ -1,9 +1,9 @@
 {
-  "name": "gae-tap",
+  "name": "timecard-gae",
   "version": "0.0.1",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MiCHiLU/gae-tap.git"
+    "url": "https://github.com/MiCHiLU/timecard-gae.git"
   },
   "dependencies": {
     "coffee-script": ">=1.3.1",

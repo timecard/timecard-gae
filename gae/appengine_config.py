@@ -5,7 +5,7 @@ appstats_RECORD_FRACTION = 0.1
 
 config_APPS = {
   #{<domain>: ((<path prefix>, <module name>[, <namespace>]),)}
-  "<:localhost|gae-tap.appspot.com>": (("", "app_sample"),),
+  "<:localhost|timecard-gae.appspot.com>": (("", "app_sample"),),
   #r"<subdomain:(?!www\.)[^.]+>.local": (("/test", "app_sample"),),
 }
 #config_APPSTATS_INCLUDE_ERROR_STATUS = False
