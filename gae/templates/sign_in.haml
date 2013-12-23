@@ -38,11 +38,8 @@
           %label{:for => "user_remember_me"} Remember me
         %div
           %input.btn.btn-default{:name => "commit", :type => "submit", :value => "Sign in"}/
-      %a{:href => "/users/sign_up"} Sign up
-      %br/
-      %a{:href => "/users/password/new"} Forgot your password?
-      %br/
-      %a{:href => "/users/auth/github"} Sign in with Github
-      %br/
-      %a{:href => "/users/auth/ruffnote"} Sign in with Ruffnote
-      %br/
+      %a(href="/oauth/google") Sign in with Google
+      -#%br/
+      -#%a(href="/oauth/github") Sign in with Github
+      -#%br/
+      -#%a(href="/oauth/ruffnote") Sign in with Ruffnote
