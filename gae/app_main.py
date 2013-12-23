@@ -5,17 +5,17 @@ import utils
 from js.bootstrap import bootstrap
 import webapp2
 
-class SignIn(utils.RequestHandler):
+class Index(utils.RequestHandler):
   i18n = True
-  i18n_domain = "timecard-users"
+  i18n_domain = "timecard"
 
   @utils.head(bootstrap)
   @utils.session_read_only
-  def get(self, subdomain=None):
+  def get(self):
     name = self.session.get("name")
     is_signin = name is not None
-    self.render_response("sign_in.html", locals())
+    self.render_response("index.html", locals())
 
 routes = [
-  webapp2.Route("/sign_in", SignIn),
+  webapp2.Route("/", Index),
 ]
