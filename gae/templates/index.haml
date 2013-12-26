@@ -1,37 +1,5 @@
-%head
-  %title Timecard
-  %meta{:content => "authenticity_token", :name => "csrf-param"}/
-  %meta{:content => "r9VG5mY24ByPWzy0s6coj7BrjgffFHPVsL300WGV/K4=", :name => "csrf-token"}/
-%body.sessions{"data-timer" => ""}/
-%nav.navbar.navbar-default{:role => "navigation"}
-  .container
-    .navbar-header
-      %button.navbar-toggle{"data-target" => ".navbar-ex1-collapse", "data-toggle" => "collapse", :type => "button"}
-        %span.icon-bar
-        %span.icon-bar
-        %span.icon-bar
-      %a.navbar-brand{"data-no-turbolink" => "1", :href => "/"} Timecard
-    .collapse.navbar-collapse.navbar-ex1-collapse
-      %ul.nav.navbar-nav
-        {% if is_signin %}
-        %li
-          %a
-            %span.text-muted Projects
-        %li
-          %a
-            %span.text-muted Me
-        %li
-          %a
-            %span.text-muted Account settings
-        %li
-          %a
-            %span.text-muted Import
-        %li
-          %a(href="/oauth/signout") Logout
-        {% else %}
-        %li
-          %a(href="/oauth/google") Login
-        {% endif %}
+{% extends "base_timecard.html" %}
+{% block content %}
 {% if not is_signin %}
 .container
   .row
@@ -41,3 +9,4 @@
       %a.btn.btn-default.disabled(href="/oauth/github") Sign in with Github
       %a.btn.btn-default.disabled(href="/oauth/ruffnote") Sign in with Ruffnote
 {% endif %}
+{% endblock content %}

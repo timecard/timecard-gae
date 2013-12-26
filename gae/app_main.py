@@ -5,10 +5,11 @@ import utils
 from js.bootstrap import bootstrap
 import webapp2
 
-class Index(utils.RequestHandler):
+class BaseHandler(utils.RequestHandler):
   i18n = True
   i18n_domain = "timecard"
 
+class Index(BaseHandler):
   @utils.head(bootstrap)
   @utils.session_read_only
   def get(self):
