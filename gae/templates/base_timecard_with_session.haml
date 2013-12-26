@@ -1,0 +1,25 @@
+{% extends "base_timecard.html" %}
+{% set user = USERS.get_current_user() %}
+{% block nav %}
+.collapse.navbar-collapse.navbar-ex1-collapse
+  %ul.nav.navbar-nav
+    {% if user %}
+    %li
+      %a
+        %span.text-muted Projects
+    %li
+      %a
+        %span.text-muted Me
+    %li
+      %a(href="{{ URI_FOR('settings') }}") Account settings
+    %li
+      %a
+        %span.text-muted Import
+    %li
+      %a(href="{{ USERS.create_logout_url() }}") Logout
+    {% else %}
+    %li
+      %a(href="{{ USERS.create_login_url() }}") Login
+    {% endif %}
+{% endblock nav %}
+{% block content %}{% endblock content %}

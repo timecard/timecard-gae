@@ -4,7 +4,7 @@
 {% set domain = "timecard-gae.appspot.com" %}
 {% set fb_app_id = "timecard-gae" %}
 {% block head %}
-%script(src="/static/js/sample{% if not DEBUG %}.min{% endif %}.js")
+-#%script(src="/static/js/sample{% if not DEBUG %}.min{% endif %}.js")
 {% endblock head %}
 {% block main %}
 %nav.navbar.navbar-default{:role => "navigation"}
@@ -15,35 +15,6 @@
         %span.icon-bar
         %span.icon-bar
       %a.navbar-brand{"data-no-turbolink" => "1", :href => "/"} Timecard
-    .collapse.navbar-collapse.navbar-ex1-collapse
-      %ul.nav.navbar-nav
-        {% if is_signin %}
-        %li
-          %a
-            %span.text-muted Projects
-        %li
-          %a
-            %span.text-muted Me
-        %li
-          %a(href="/settings") Account settings
-        %li
-          %a
-            %span.text-muted Import
-        %li
-          %a(href="/oauth/signout") Logout
-        {% else %}
-        %li
-          %a(href="/oauth/google") Login
-        {% endif %}
-{% block content %}
-{% if not is_signin %}
-.container
-  .row
-    .col-lg-12.col-md-12
-      %h2 Sign in
-      %a.btn.btn-primary(href="/oauth/google") Sign in with Google
-      %a.btn.btn-default.disabled(href="/oauth/github") Sign in with Github
-      %a.btn.btn-default.disabled(href="/oauth/ruffnote") Sign in with Ruffnote
-{% endif %}
-{% endblock content %}
+    {% block nav %}{% endblock nav %}
+{% block content %}{% endblock content %}
 {% endblock main %}
