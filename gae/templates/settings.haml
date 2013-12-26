@@ -1,0 +1,27 @@
+{% extends "base_timecard.html" %}
+{% block content %}
+.container
+  .row
+    .col-lg-12.col-md-12
+      %h2 Edit User
+      %form#edit_user.edit_user{"accept-charset" => "UTF-8", :method => "post"}
+        .form-group
+          %label{:for => "user_name"} Name
+          %br/
+          %input#user_name.form-control{:name => "user[name]", :type => "text", :value => "michilu"}/
+        %input.btn.btn-primary{:name => "commit", :type => "submit", :value => "Update"}/
+      %h2 Service
+      %dl
+        %dt
+          %b Github
+        %dd
+          %a.btn.btn-default.disabled(href="/oauth/github") Sign in with Github
+        %dt
+          %b Ruffnote
+        %dd
+          %a.btn.btn-default.disabled(href="/oauth/ruffnote") Sign in with Ruffnote
+      %h3 Cancel my account
+      %p Unhappy?
+      %form.button_to{:action => "/users", :method => "post"}
+        %input.btn.btn-danger{"data-confirm" => "Are you sure?", :type => "submit", :value => "Cancel my account"}/
+{% endblock content %}
