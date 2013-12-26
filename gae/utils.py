@@ -94,9 +94,9 @@ class ConfigDefaults(object):
   ROUTES = (
     (r"^/sitemap[^/]+\.xml$", "utils.Sitemap"),
     (r"^/_ah/(start|stop|warmup)$", "utils.Dummy"),
-    (r"^/_ah/generate_sitemap$", "utils.GenerateSitemap"),
-    (r"^/_ah/maintain_response$", "utils.MaintainResponse"),
-    (r"^/_ah/response_cache$", "utils.ResponseCache"),
+    (r"^/_tap/generate_sitemap$", "utils.GenerateSitemap"),
+    (r"^/_tap/maintain_response$", "utils.MaintainResponse"),
+    (r"^/_tap/response_cache$", "utils.ResponseCache"),
   )
   SECRET_KEY = None
   SESSION_MAX_AGE = 3600 # 1h
@@ -1210,7 +1210,8 @@ class RequestHandler(webapp2.RequestHandler, GoogleAnalyticsMixin):
     'IMAGE_URL': config.IMAGE_URL,
     'CURRENT_VERSION_ID': os.environ.get('CURRENT_VERSION_ID'),
     'FEEDBACK_FORMKEY': config.FEEDBACK_FORMKEY,
-    "NULL_GETTEXT": lambda x:x
+    "NULL_GETTEXT": lambda x:x,
+    "URI_FOR": webapp2.uri_for,
   }
   default_language = "en"
   i18n = False
@@ -1233,7 +1234,7 @@ class RequestHandler(webapp2.RequestHandler, GoogleAnalyticsMixin):
     namespace = inspect.getmodule(self).__dict__.get(NAMESPACE_KEY)
     if namespace is not None:
       self.dispatch = in_namespace(namespace)(self.dispatch)
-    self.users = Users(self)
+    self.context["USERS"] = self.users = Users(self)
 
 
   # for WebOb.Response
