@@ -2,8 +2,12 @@ from datetime import datetime
 
 import utils
 
+from google.appengine.ext import ndb
 from js.bootstrap import bootstrap
 import webapp2
+
+import api_main as api
+import model_main as model
 
 class BaseHandler(utils.RequestHandler):
   i18n = True
@@ -17,8 +21,15 @@ class Index(BaseHandler):
 
 class Settings(BaseHandler):
   @utils.head(bootstrap)
-  @utils.session_read_only
+  @utils.session
   def get(self):
+    user = self.users.get_current_user()
+    if user is not None:
+      key = ndb.Key(model.User, user.user_id())
+      entity = yield key.get_async()
+      if entity is not None:
+        user.name = entity.name
+        user.set_to_session(self.session)
     self.render_response("settings.html", locals())
 
   @utils.head(bootstrap)
@@ -30,6 +41,7 @@ class Settings(BaseHandler):
       if name is not None:
         user.name = name
         user.set_to_session(self.session)
+    yield api.user_store(user)
     self.render_response("settings.html", locals())
 
 routes = [
