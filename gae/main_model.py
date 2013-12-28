@@ -43,10 +43,10 @@ class WorkLoad(ndb.Model):
   #ユーザーは同時に複数のWorkLoadを作れない
   #key
   #project = ndb.KeyProperty(indexed=True, kind=Project, required=True)
+  #issue = ndb.KeyProperty(indexed=True, kind=Issue, required=True)
+  #start_at = ndb.DateTimeProperty(indexed=False, auto_now_add=True)
 
-  start_at = ndb.DateTimeProperty(indexed=False, required=True)
   end_at = ndb.DateTimeProperty(indexed=False)
-  issue = ndb.KeyProperty(indexed=True, kind=Issue, required=True)
   user = ndb.KeyProperty(indexed=True, kind=User, required=True)
   active = ndb.BooleanProperty(indexed=True, default=True)
 
