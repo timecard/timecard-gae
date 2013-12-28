@@ -98,7 +98,7 @@ class Users(utils.RequestHandler):
     assert self.users.create_logout_url() == "/oauth/signout"
     user = self.users.get_current_user()
     assert user is not None
-    assert user.user_id() == u"google:ID"
+    assert user.user_id() == u"ID"
     assert getattr(user, "locale", None) is None
 
   @utils.session
@@ -107,6 +107,11 @@ class Users(utils.RequestHandler):
     user = utils.User(data={"id": u"ID", u"locale": u"ja"})
     assert user is not None
     user.set_to_session(self.session)
+
+class LoginRequired(utils.RequestHandler):
+  @utils.login_required
+  def get(self):
+    pass
 
 class Namespace(utils.RequestHandler):
   def get(self):
@@ -135,6 +140,7 @@ routes = [
   webapp2.Route("/proxy", Proxy),
   webapp2.Route("/sessions", Sessions),
   webapp2.Route("/users", Users),
+  webapp2.Route("/login_required", LoginRequired),
   webapp2.Route("/namespace", Namespace),
   webapp2.Route("/zipfile", ZipFile),
 ]

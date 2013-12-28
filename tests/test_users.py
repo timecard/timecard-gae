@@ -18,7 +18,9 @@ class UserTest(unittest.TestCase):
     assert user._provider is None
     assert user.nickname() is None
     assert user.email() is None
-    assert user.user_id() == u"google:ID"
+    assert user.user_id() == u"ID"
+    user._provider = "test"
+    assert user.user_id() == u"test:ID"
     assert user.locale == u"ja"
     with pytest.raises(AttributeError):
       user.gender
@@ -38,3 +40,6 @@ class UsersTest(tests.util.TestCase):
   def test_users(self):
     self.app.post("/test/users")
     self.app.get("/test/users")
+
+  def test_login_required(self):
+    self.app.get("/test/login_required")

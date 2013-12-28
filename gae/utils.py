@@ -36,6 +36,7 @@ from google.appengine.api import (
   mail,
   memcache,
   namespace_manager,
+  oauth,
   taskqueue,
   urlfetch,
 )
@@ -884,7 +885,10 @@ class User(object):
 
   def user_id(self):
     assert self._id
-    return ":".join((self._provider or self.default_provider, self._id))
+    if self._provider:
+      return ":".join((self._provider, self._id))
+    else:
+      return self._id
 
 class Users(object):
   def __init__(self, app):
@@ -1171,6 +1175,30 @@ def session_read_only(func):
   def inner(self, *argv, **kwargv):
     self.session_store = sessions.get_store(request=self.request)
     self.session_store.config["secret_key"] = get_namespaced_secret_key(namespace_manager.get_namespace())
+    func(self, *argv, **kwargv)
+
+  return inner
+
+def login_required(func):
+
+  @wraps(func)
+  @ndb.tasklet
+  def inner(self, *argv, **kwargv):
+    self.session_store = sessions.get_store(request=self.request)
+    self.session_store.config["secret_key"] = get_namespaced_secret_key(namespace_manager.get_namespace())
+    user = self.users.get_current_user()
+    if user is None:
+      try:
+        user = oauth.get_current_user()
+      except oauth.InvalidOAuthTokenError as e:
+        explanation = "invalid token"
+      except oauth.OAuthRequestError as e:
+        explanation = "invalid header"
+      except oauth.OAuthServiceFailureError as e:
+        explanation = "service failure"
+      if user is None:
+        logging.info(e)
+        self.abort(401, explanation=explanation)
     func(self, *argv, **kwargv)
 
   return inner
