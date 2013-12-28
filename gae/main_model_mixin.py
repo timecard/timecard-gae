@@ -151,5 +151,7 @@ class Comment(ModelMixinBase):
       issue_key,
       author_name,
     ) = self.__class__.parse_key(self.key)
+    project_key, _will_start_at, _user = self.__class__.parse_key(issue_key)
     self.issue = issue_key
     self.author_name = author_name
+    self.project = project_key

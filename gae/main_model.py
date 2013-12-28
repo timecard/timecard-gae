@@ -68,9 +68,9 @@ class WorkLoad(ModelBase, model_mixin.WorkLoad):
 
 class Comment(ModelBase, model_mixin.Comment):
   #key
+  ##project = ndb.KeyProperty(indexed=True, kind=Project, required=True)
   #issue = ndb.KeyProperty(indexed=True, kind=Issue, required=True)
   #time_at = ndb.DateTimeProperty(indexed=False, auto_now_add=True)
   #author_name = ndb.StringProperty(indexed=False, required=True)
 
   body = ndb.TextProperty(indexed=False, required=True)
-  project = ndb.KeyProperty(indexed=True, kind=Project, required=True)
