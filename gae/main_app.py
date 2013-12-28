@@ -6,8 +6,8 @@ from google.appengine.ext import ndb
 from js.bootstrap import bootstrap
 import webapp2
 
-import api_main as api
-import model_main as model
+import main_api as api
+import main_model as model
 
 class BaseHandler(utils.RequestHandler):
   i18n = True
