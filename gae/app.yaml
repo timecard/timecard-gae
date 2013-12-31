@@ -5,6 +5,8 @@ api_version: 1
 threadsafe: true
 
 libraries:
+- name: endpoints
+  version: 1.0
 - name: jinja2
   version: latest
 - name: markupsafe
@@ -48,6 +50,8 @@ handlers:
 - url: /_tap/(generate_sitemap|maintain_response|response_cache)
   script: utils.app
   login: admin
+- url: /_ah/spi/.*
+  script: api.app
 - url: /robots.txt
   script: utils.app_static_root
 - url: /.*
