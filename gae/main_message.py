@@ -1,5 +1,15 @@
 from protorpc import messages
 
+class UserSend(messages.Message):
+  user_id     = messages.StringField (1, required=True)
+  name        = messages.StringField (2, required=True)
+
+class UserReceive(messages.Message):
+  name        = messages.StringField (1, required=True)
+
+class UserSendCollection(messages.Message):
+  items = messages.MessageField(UserSend, 1, repeated=True)
+
 class ProjectSend(messages.Message):
   name        = messages.StringField (1, required=True)
   description = messages.StringField (2, required=True)
