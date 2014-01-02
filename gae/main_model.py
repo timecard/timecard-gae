@@ -9,10 +9,8 @@ class ModelBase(ndb.Model):
   def _post_get_hook(cls, key, future):
     entity = future.get_result()
     if entity is not None:
-      entity.set_from_key()
-
-  def set_from_key(self):
-    pass
+      if hasattr(entity, "set_from_key"):
+        entity.set_from_key()
 
 class User(ModelBase, model_mixin.User):
   #key
