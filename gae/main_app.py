@@ -6,7 +6,7 @@ from google.appengine.ext import ndb
 from js.bootstrap import bootstrap
 import webapp2
 
-import main_api as api
+import main_api_v1 as api
 import main_model as model
 
 class BaseHandler(utils.RequestHandler):
