@@ -17,17 +17,15 @@ def user_store(user):
   entity.name = user.name
   yield entity.put_async()
 
-#package = "timecard"
+api = endpoints.api(name="timecard", version="v1")
 
-@endpoints.api(name="timecard", version="v1")
-class ProjectAPI(remote.Service):
+@api.api_class(resource_name="project")
+class Project(remote.Service):
 
-  @endpoints.method(message_types.VoidMessage, message.ProjectSend,
-                    path="projects", http_method="GET",
-                    name="timecard.projects")
-  def greetings_list(self, _request):
+  @endpoints.method(message_types.VoidMessage, message.ProjectSend)
+  def list(self, _request):
     return message.ProjectSendCollection()
 
 api_services = [
-  ProjectAPI,
+  Project,
 ]
