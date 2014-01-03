@@ -1,0 +1,12 @@
+{% extends "base_timecard_with_session.html" %}
+{% block content %}
+{% if not user %}
+.container
+  .row
+    .col-lg-12.col-md-12
+      %h2 Sign in
+      %a.btn.btn-primary(href="{{ USERS.create_login_url() }}") Sign in with Google
+      %a.btn.btn-default.disabled(href="{{ USERS.create_login_url('github') }}") Sign in with Github
+      %a.btn.btn-default.disabled(href="{{ USERS.create_login_url('ruffnote') }}") Sign in with Ruffnote
+{% endif %}
+{% endblock content %}
