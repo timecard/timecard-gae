@@ -3,6 +3,7 @@ from datetime import datetime
 import utils
 
 from google.appengine.ext import ndb
+from js.angular import angular
 from js.bootstrap import bootstrap
 import webapp2
 
@@ -14,13 +15,13 @@ class BaseHandler(utils.RequestHandler):
   i18n_domain = "timecard"
 
 class Index(BaseHandler):
-  @utils.head(bootstrap)
+  @utils.head(angular, bootstrap)
   @utils.session_read_only
   def get(self):
     self.render_response("index.html", locals())
 
 class Settings(BaseHandler):
-  @utils.head(bootstrap)
+  @utils.head(angular, bootstrap)
   @utils.session
   def get(self):
     user = self.users.get_current_user()
@@ -32,7 +33,7 @@ class Settings(BaseHandler):
         user.set_to_session(self.session)
     self.render_response("settings.html", locals())
 
-  @utils.head(bootstrap)
+  @utils.head(angular, bootstrap)
   @utils.session
   def post(self):
     user = self.users.get_current_user()
