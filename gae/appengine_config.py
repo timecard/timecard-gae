@@ -16,7 +16,7 @@ config_APPS = {
 config_SECRET_KEY = "a very long and secret session key goes here"
 
 #config_APPSTATS_INCLUDE_ERROR_STATUS = False
-#config_FEEDBACK_FORMKEY = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+config_FEEDBACK_FORMKEY = "dFBYVXYzOUg2VzhZQ2ZoVFExZzVyVlE6MA"
 #config_GA_ACCOUNT = ""
 #config_JOB_EMAIL_RECIPIENT = "email@example.com"
 #config_WEBAPP2_CONFIG = {}
