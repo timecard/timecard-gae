@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-01-04 11:15+0700\n"
+"POT-Creation-Date: 2014-01-04 12:10+0700\n"
 "PO-Revision-Date: 2014-01-04 10:19+0700\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: ja <LL@li.org>\n"
@@ -45,11 +45,11 @@ msgstr "プロジェクトの時間を追跡する。"
 msgid "Sign in with Google"
 msgstr "Googleでサインイン"
 
-#: gae/templates/index.html:18 gae/templates/settings.html:21
+#: gae/templates/index.html:18 gae/templates/settings.html:30
 msgid "Sign in with Github"
 msgstr "Githubでサインイン"
 
-#: gae/templates/index.html:21 gae/templates/settings.html:27
+#: gae/templates/index.html:21 gae/templates/settings.html:36
 msgid "Sign in with Ruffnote"
 msgstr "Ruffnoteでサインイン"
 
@@ -77,19 +77,23 @@ msgstr "ユーザーを編集"
 msgid "Name"
 msgstr "名前"
 
-#: gae/templates/settings.html:13
+#: gae/templates/settings.html:11
+msgid "Language"
+msgstr "言語"
+
+#: gae/templates/settings.html:22
 msgid "Update"
 msgstr "設定"
 
-#: gae/templates/settings.html:15
+#: gae/templates/settings.html:24
 msgid "Service"
 msgstr "サービス"
 
-#: gae/templates/settings.html:30 gae/templates/settings.html:33
+#: gae/templates/settings.html:39 gae/templates/settings.html:42
 msgid "Cancel my account"
 msgstr "アカウントを削除"
 
-#: gae/templates/settings.html:31
+#: gae/templates/settings.html:40
 msgid "Unhappy?"
 msgstr ""
 
