@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-01-04 10:52+0700\n"
+"POT-Creation-Date: 2014-01-04 11:15+0700\n"
 "PO-Revision-Date: 2014-01-04 10:19+0700\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: ja <LL@li.org>\n"
@@ -76,6 +76,10 @@ msgstr "ユーザーを編集"
 #: gae/templates/settings.html:9
 msgid "Name"
 msgstr "名前"
+
+#: gae/templates/settings.html:13
+msgid "Update"
+msgstr "設定"
 
 #: gae/templates/settings.html:15
 msgid "Service"
