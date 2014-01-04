@@ -4,7 +4,7 @@
 {% set domain = "timecard-gae.appspot.com" %}
 {% set fb_app_id = "timecard-gae" %}
 {% block head %}
--#%script(src="/static/js/sample{% if not DEBUG %}.min{% endif %}.js")
+%script(src="/static/js/timecard{% if not DEBUG %}.min{% endif %}.js")
 {% endblock head %}
 {% block main %}
 %nav.navbar.navbar-default{:role => "navigation"}
