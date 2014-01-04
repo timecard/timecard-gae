@@ -11,7 +11,7 @@
           %label{:for => "language"} {{ _("Language") }}
           %select#user_language.form-control{:name => "language"}
             {% for value, label in language_list %}
-            {% if value == language %}
+            {% if value == user.language %}
             %option(value="{{ value }}" selected) {{ label }}
             {% else %}
             %option(value="{{ value }}") {{ label }}

@@ -32,7 +32,7 @@ class Settings(BaseHandler):
       entity = yield key.get_async()
       if entity is not None:
         user.name = entity.name
-        user.languages = entity.language
+        user.language = entity.language
         user.set_to_session(self.session)
     language_list = self.language_list
     self.render_response("settings.html", locals())
