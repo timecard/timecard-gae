@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import logging
 import utils
 
 from google.appengine.ext import ndb
@@ -13,15 +14,32 @@ import main_model as model
 class BaseHandler(utils.RequestHandler):
   i18n = True
   i18n_domain = "timecard"
+  language_list = model.LANGUAGE_CHOICES
+
+  @webapp2.cached_property
+  @ndb.synctasklet
+  def default_language(self):
+    user = self.users.get_current_user()
+    if user is not None:
+      if hasattr(user, "language") and user.language is not None:
+        raise ndb.Return(user.language)
+      else:
+        key = ndb.Key(model.User, user.user_id())
+        entity = yield key.get_async()
+        if entity is not None and hasattr(entity, "language") and entity.language is not None:
+          raise ndb.Return(entity.language)
+    raise ndb.Return("en")
 
 class Index(BaseHandler):
   @utils.head(angular, bootstrap)
   @utils.session_read_only
   def get(self):
+    language_list = self.language_list
     self.render_response("index.html", locals())
 
 class Settings(BaseHandler):
   @utils.head(angular, bootstrap)
+  @utils.csrf
   @utils.session
   def get(self):
     user = self.users.get_current_user()
@@ -30,10 +48,13 @@ class Settings(BaseHandler):
       entity = yield key.get_async()
       if entity is not None:
         user.name = entity.name
+        user.language = entity.language
         user.set_to_session(self.session)
+    language_list = self.language_list
     self.render_response("settings.html", locals())
 
   @utils.head(angular, bootstrap)
+  @utils.csrf
   @utils.session
   def post(self):
     user = self.users.get_current_user()
@@ -41,8 +62,16 @@ class Settings(BaseHandler):
       name = self.request.POST.get("name")
       if name is not None:
         user.name = name
-        user.set_to_session(self.session)
-    yield api.user_store(user)
+      language = self.request.POST.get("language")
+      if language is not None:
+        user.language = language
+      user.set_to_session(self.session)
+      future = api.user_store(user)
+      if future.check_success():
+        logging.error(future.get_exception())
+        self.abort(500)
+      self.redirect(webapp2.uri_for("settings"))
+    language_list = self.language_list
     self.render_response("settings.html", locals())
 
 routes = [

@@ -1,4 +1,4 @@
-#-* coding: utf-8 -*-
+# -* coding: utf-8 -*-
 
 from google.appengine.ext import ndb
 
@@ -12,11 +12,17 @@ class ModelBase(ndb.Model):
       if hasattr(entity, "set_from_key"):
         entity.set_from_key()
 
+LANGUAGE_CHOICES = (
+  ("en", u"English"),
+  ("ja", u"日本語"),
+)
+
 class User(ModelBase, model_mixin.User):
   #key
   #user_id = ndb.StringProperty(indexed=True, required=True)
 
   name = ndb.StringProperty(indexed=False)
+  language = ndb.StringProperty(indexed=False, choices=[value for value, label in LANGUAGE_CHOICES], default=LANGUAGE_CHOICES[0][0])
   #not_do_today = list of Issue
 
 class Project(ModelBase):

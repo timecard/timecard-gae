@@ -3,25 +3,34 @@
 .container
   .row
     .col-lg-12.col-md-12
-      %h2 Edit User
-      %form#edit_user.edit_user{"accept-charset" => "UTF-8", :method => "post"}
+      %h2 {{ _("Edit User") }}
+      %form(name="edit_user" accept-charset="UTF-8" action="{{ URI_FOR('settings') }}" method="post")
         .form-group
-          %label{:for => "name"} Name
-          %br/
-          %input#user_name.form-control{:name => "name", :type => "text", :value => "{{ user.name }}"}/
-        %input.btn.btn-primary{:name => "commit", :type => "submit", :value => "Update"}/
-      %h2 Service
+          %label{:for => "name"} {{ _("Name") }}
+          %input.form-control(name="name" type="text" value="{{ user.name }}" required ng-model="name" ng-init="name='{{ user.name }}'")/
+          %label{:for => "language"} {{ _("Language") }}
+          %select.form-control(name="language" ng-model="language" ng-init="language='{{ user.language }}'")
+            {% for value, label in language_list %}
+            {% if value == user.language %}
+            %option(value="{{ value }}" selected) {{ label }}
+            {% else %}
+            %option(value="{{ value }}") {{ label }}
+            {% endif %}
+            {% endfor %}
+        %input(type="hidden" name="csrf" value="{{ csrf }}")
+        %button.btn.btn-primary(type="submit" ng-disabled="edit_user.$invalid||edit_user.$pristine") {{ _("Update") }}
+      %h2 {{ _("Service") }}
       %dl
         %dt
           %b Github
         %dd
-          %a.btn.btn-default.disabled(href="{{ USERS.create_login_url('github') }}") Sign in with Github
+          %a.btn.btn-default.disabled(href="{{ USERS.create_login_url('github') }}") {{ _("Sign in with Github") }}
         %dt
           %b Ruffnote
         %dd
-          %a.btn.btn-default.disabled(href="{{ USERS.create_login_url('ruffnote') }}") Sign in with Ruffnote
-      %h3 Cancel my account
-      %p Unhappy?
+          %a.btn.btn-default.disabled(href="{{ USERS.create_login_url('ruffnote') }}") {{ _("Sign in with Ruffnote") }}
+      %h3 {{ _("Cancel my account") }}
+      %p {{ _("Unhappy?") }}
       %form.button_to{:action => "/users", :method => "post"}
-        %input.btn.btn-danger.disabled{"data-confirm" => "Are you sure?", :type => "submit", :value => "Cancel my account"}/
+        %input.btn.btn-danger.disabled{"data-confirm" => "Are you sure?", :type => "submit", :value => "{{ _('Cancel my account') }}"}/
 {% endblock content %}

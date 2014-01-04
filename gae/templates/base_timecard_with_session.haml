@@ -5,21 +5,27 @@
   %ul.nav.navbar-nav
     %li
       %a
-        %span.text-muted Projects
+        %span.text-muted {{ _("Projects") }}
     {% if user %}
     %li
       %a
-        %span.text-muted Me
+        %span.text-muted {{ _("Me") }}
     {% endif %}
   %ul.nav.navbar-nav.navbar-right
     {% if user %}
     %li
-      %a(href="{{ URI_FOR('settings') }}") Account settings
+      %a(href="{{ URI_FOR('settings') }}") {{ _("Account settings") }}
     %li
-      %a(href="{{ USERS.create_logout_url() }}") Logout
+      %a(href="{{ USERS.create_logout_url() }}") {{ _("Logout") }}
     {% else %}
+    {% for value, key in language_list %}
+    {% if value != language %}
     %li
-      %a(href="{{ USERS.create_login_url() }}") Login
+      %a(href="?l={{ value }}") {{ key }}
+    {% endif %}
+    {% endfor %}
+    %li
+      %a(href="{{ USERS.create_login_url() }}") {{ _("Login") }}
     {% endif %}
 {% endblock nav %}
 {% block content %}{% endblock content %}
