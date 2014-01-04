@@ -4,9 +4,22 @@
 .container
   .row
     .col-lg-12.col-md-12
-      %h2 Sign in
-      %a.btn.btn-primary(href="{{ USERS.create_login_url() }}") Sign in with Google
-      %a.btn.btn-default.disabled(href="{{ USERS.create_login_url('github') }}") Sign in with Github
-      %a.btn.btn-default.disabled(href="{{ USERS.create_login_url('ruffnote') }}") Sign in with Ruffnote
+      .welcome.text-center
+        .jumbotron(style="background-color:#fff;")
+          %h1 Timecard
+          %p.lead
+            Time tracking for your project.
+          .row(style="padding:20px 0;")
+            .col-md-3.col-md-offset-2
+              %a.btn.btn-primary.btn-block(href="{{ USERS.create_login_url() }}") Sign in with Google
+            .col-md-3
+              %a.btn.btn-default.btn-block.disabled(href="{{ USERS.create_login_url('github') }}") Sign in with Github
+            .col-md-3
+              %a.btn.btn-default.btn-block.disabled(href="{{ USERS.create_login_url('ruffnote') }}") Sign in with Ruffnote
+        %section
+          %h2(style="color:#555555; font-weight:normal;")
+            It is possible to time tracking in connection with the Github Issue.
+          %h2(style="color:#555555; font-weight:normal;")
+            Project owner can see at a glance the working hours of project members.
 {% endif %}
 {% endblock content %}

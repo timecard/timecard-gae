@@ -3,18 +3,18 @@
 {% block nav %}
 .collapse.navbar-collapse.navbar-ex1-collapse
   %ul.nav.navbar-nav
-    {% if user %}
     %li
       %a
         %span.text-muted Projects
+    {% if user %}
     %li
       %a
         %span.text-muted Me
+    {% endif %}
+  %ul.nav.navbar-nav.navbar-right
+    {% if user %}
     %li
       %a(href="{{ URI_FOR('settings') }}") Account settings
-    %li
-      %a
-        %span.text-muted Import
     %li
       %a(href="{{ USERS.create_logout_url() }}") Logout
     {% else %}
