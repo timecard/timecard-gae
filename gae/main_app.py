@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from datetime import datetime
 
 import utils
@@ -13,11 +14,16 @@ import main_model as model
 class BaseHandler(utils.RequestHandler):
   i18n = True
   i18n_domain = "timecard"
+  language_list = (
+    ("en", u"English"),
+    ("ja", u"日本語"),
+  )
 
 class Index(BaseHandler):
   @utils.head(angular, bootstrap)
   @utils.session_read_only
   def get(self):
+    language_list = self.language_list
     self.render_response("index.html", locals())
 
 class Settings(BaseHandler):
@@ -31,6 +37,7 @@ class Settings(BaseHandler):
       if entity is not None:
         user.name = entity.name
         user.set_to_session(self.session)
+    language_list = self.language_list
     self.render_response("settings.html", locals())
 
   @utils.head(angular, bootstrap)
@@ -43,6 +50,7 @@ class Settings(BaseHandler):
         user.name = name
         user.set_to_session(self.session)
     yield api.user_store(user)
+    language_list = self.language_list
     self.render_response("settings.html", locals())
 
 routes = [
