@@ -22,6 +22,7 @@ class User(ModelBase, model_mixin.User):
   #user_id = ndb.StringProperty(indexed=True, required=True)
 
   name = ndb.StringProperty(indexed=False)
+  language = ndb.StringProperty(indexed=False, choices=[value for value, label in LANGUAGE_CHOICES], default=LANGUAGE_CHOICES[0][0])
   #not_do_today = list of Issue
 
 class Project(ModelBase):

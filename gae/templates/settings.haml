@@ -8,6 +8,15 @@
         .form-group
           %label{:for => "name"} {{ _("Name") }}
           %input#user_name.form-control{:name => "name", :type => "text", :value => "{{ user.name }}"}/
+          %label{:for => "language"} {{ _("Language") }}
+          %select#user_language.form-control{:name => "language"}
+            {% for value, label in language_list %}
+            {% if value == language %}
+            %option(value="{{ value }}" selected) {{ label }}
+            {% else %}
+            %option(value="{{ value }}") {{ label }}
+            {% endif %}
+            {% endfor %}
         %input.btn.btn-primary{:name => "commit", :type => "submit", :value => "{{ _('Update') }}"}/
       %h2 {{ _("Service") }}
       %dl

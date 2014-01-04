@@ -15,6 +15,7 @@ def user_store(user):
   if entity is None:
     entity = model.User(key=key)
   entity.name = user.name
+  entity.language = user.language
   yield entity.put_async()
 
 api = endpoints.api(name="timecard", version="v1")

@@ -32,6 +32,7 @@ class Settings(BaseHandler):
       entity = yield key.get_async()
       if entity is not None:
         user.name = entity.name
+        user.languages = entity.language
         user.set_to_session(self.session)
     language_list = self.language_list
     self.render_response("settings.html", locals())
@@ -45,6 +46,9 @@ class Settings(BaseHandler):
       if name is not None:
         user.name = name
         user.set_to_session(self.session)
+      language = self.request.POST.get("language")
+      if language is not None:
+        user.language = language
     yield api.user_store(user)
     language_list = self.language_list
     self.render_response("settings.html", locals())
