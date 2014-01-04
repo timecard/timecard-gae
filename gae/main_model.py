@@ -1,4 +1,4 @@
-#-* coding: utf-8 -*-
+# -* coding: utf-8 -*-
 
 from google.appengine.ext import ndb
 
@@ -11,6 +11,11 @@ class ModelBase(ndb.Model):
     if entity is not None:
       if hasattr(entity, "set_from_key"):
         entity.set_from_key()
+
+LANGUAGE_CHOICES = (
+  ("en", u"English"),
+  ("ja", u"日本語"),
+)
 
 class User(ModelBase, model_mixin.User):
   #key

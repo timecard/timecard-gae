@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from datetime import datetime
 
 import utils
@@ -14,10 +13,7 @@ import main_model as model
 class BaseHandler(utils.RequestHandler):
   i18n = True
   i18n_domain = "timecard"
-  language_list = (
-    ("en", u"English"),
-    ("ja", u"日本語"),
-  )
+  language_list = model.LANGUAGE_CHOICES
 
 class Index(BaseHandler):
   @utils.head(angular, bootstrap)
