@@ -1165,8 +1165,7 @@ def session(func):
 
   @wraps(func)
   def inner(self, *argv, **kwargv):
-    self.session_store = sessions.get_store(request=self.request)
-    self.session_store.config["secret_key"] = get_namespaced_secret_key(namespace_manager.get_namespace())
+    self.set_session_store()
     try:
       ndb.toplevel(func)(self, *argv, **kwargv)
     finally:
@@ -1178,9 +1177,8 @@ def session_read_only(func):
 
   @wraps(func)
   def inner(self, *argv, **kwargv):
-    self.session_store = sessions.get_store(request=self.request)
-    self.session_store.config["secret_key"] = get_namespaced_secret_key(namespace_manager.get_namespace())
-    func(self, *argv, **kwargv)
+    self.set_session_store()
+    ndb.toplevel(func)(self, *argv, **kwargv)
 
   return inner
 
@@ -1304,6 +1302,11 @@ class RequestHandler(webapp2.RequestHandler, GoogleAnalyticsMixin):
     except AttributeError:
       return
 
+  def set_session_store(self):
+    if not hasattr(self, "session_store"):
+      self.session_store = sessions.get_store(request=self.request)
+      self.session_store.config["secret_key"] = get_namespaced_secret_key(namespace_manager.get_namespace())
+
   @property
   def translation(self):
     translation = get_translation("{0}.py".format(self.i18n_domain), (self.language,), True, None)
@@ -1338,6 +1341,8 @@ class RequestHandler(webapp2.RequestHandler, GoogleAnalyticsMixin):
           else:
             location = "{0}?l={1}".format(self.request.path_qs, language)
           return self.redirect(location)
+      else:
+        self.set_session_store()
       self.translation
 
     try:
