@@ -75,7 +75,7 @@ msgstr "ユーザーを編集"
 
 #: gae/templates/settings.html:9
 msgid "Name"
-msgstr "お名前"
+msgstr "名前"
 
 #: gae/templates/settings.html:15
 msgid "Service"
