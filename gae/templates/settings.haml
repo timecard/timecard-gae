@@ -17,6 +17,7 @@
             %option(value="{{ value }}") {{ label }}
             {% endif %}
             {% endfor %}
+        %input(type="hidden" name="csrf" value="{{ csrf }}")
         %button.btn.btn-primary(type="submit" ng-disabled="edit_user.$invalid||edit_user.$pristine") {{ _("Update") }}
       %h2 {{ _("Service") }}
       %dl

@@ -39,6 +39,7 @@ class Index(BaseHandler):
 
 class Settings(BaseHandler):
   @utils.head(angular, bootstrap)
+  @utils.csrf
   @utils.session
   def get(self):
     user = self.users.get_current_user()
@@ -53,6 +54,7 @@ class Settings(BaseHandler):
     self.render_response("settings.html", locals())
 
   @utils.head(angular, bootstrap)
+  @utils.csrf
   @utils.session
   def post(self):
     user = self.users.get_current_user()
