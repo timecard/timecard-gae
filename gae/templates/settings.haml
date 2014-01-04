@@ -7,7 +7,6 @@
       %form#edit_user.edit_user{"accept-charset" => "UTF-8", :method => "post"}
         .form-group
           %label{:for => "name"} {{ _("Name") }}
-          %br/
           %input#user_name.form-control{:name => "name", :type => "text", :value => "{{ user.name }}"}/
         %input.btn.btn-primary{:name => "commit", :type => "submit", :value => "{{ _('Update') }}"}/
       %h2 {{ _("Service") }}
