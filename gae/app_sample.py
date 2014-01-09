@@ -1,12 +1,12 @@
 from datetime import datetime
 
-import tap
-
 from google.appengine.ext import ndb
-
 from js.angular import angular_cookies, angular_resource
 from js.bootstrap import bootstrap
+import endpoints
 import webapp2
+
+import tap
 
 class Index(tap.RequestHandler):
   i18n = True
@@ -29,3 +29,6 @@ routes = [
   webapp2.Route("/", Index),
   webapp2.Route("/index.html", ForMobile),
 ]
+
+api = endpoints.api(name="sample", version="v1")
+api_services = [api]
