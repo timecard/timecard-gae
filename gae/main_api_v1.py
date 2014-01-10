@@ -1,7 +1,6 @@
 from google.appengine.ext import ndb
 from protorpc import (
   message_types,
-  remote,
 )
 import endpoints
 import tap.endpoints
@@ -22,7 +21,7 @@ def user_store(user):
 api = endpoints.api(name="timecard", version="v1")
 
 @api.api_class(resource_name="user", path="user")
-class User(remote.Service):
+class User(tap.endpoints.CRUDService):
 
   @endpoints.method(message_types.VoidMessage, message.UserSendCollection)
   @ndb.synctasklet
@@ -49,7 +48,7 @@ class User(remote.Service):
   def read(self, _request):
     return message.UserSendCollection()
 
-  @endpoints.method(message_types.VoidMessage, message.UserSend)
+  @endpoints.method(message.UserReceive, message.UserSend)
   def update(self, _request):
     return message.UserSendCollection()
 
@@ -58,7 +57,7 @@ class User(remote.Service):
     return message.UserSendCollection()
 
 @api.api_class(resource_name="project", path="project")
-class Project(remote.Service):
+class Project(tap.endpoints.CRUDService):
 
   @endpoints.method(message_types.VoidMessage, message.ProjectSend)
   def list(self, _request):
