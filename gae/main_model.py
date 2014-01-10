@@ -21,7 +21,7 @@ class Project(ndb.Model):
   #key auto
 
   name = ndb.StringProperty(indexed=False, required=True)
-  description = ndb.TextProperty(indexed=False)
+  description = ndb.TextProperty(indexed=False, default="")
   is_public = ndb.BooleanProperty(indexed=False, default=True)
   closed = ndb.BooleanProperty(indexed=False, default=False)
   archive = ndb.BooleanProperty(indexed=False, default=False)

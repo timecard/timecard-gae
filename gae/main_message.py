@@ -23,7 +23,8 @@ class ProjectSend(messages.Message):
 
 class ProjectReceive(messages.Message):
   name        = messages.StringField (1, required=True)
-  description = messages.StringField (2, required=True)
+  description = messages.StringField (2, default="")
+  is_public   = messages.BooleanField(3, default=True)
 
 class ProjectSendCollection(messages.Message):
   items = messages.MessageField(ProjectSend, 1, repeated=True)
