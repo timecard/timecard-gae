@@ -3,9 +3,11 @@ from protorpc import messages
 class UserSend(messages.Message):
   user_id     = messages.StringField (1, required=True)
   name        = messages.StringField (2, required=True)
+  language    = messages.StringField (3, required=True)
 
 class UserReceive(messages.Message):
   name        = messages.StringField (1, required=True)
+  language    = messages.StringField (2, required=True)
 
 class UserSendCollection(messages.Message):
   items = messages.MessageField(UserSend, 1, repeated=True)
