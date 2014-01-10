@@ -8,7 +8,7 @@ import webapp2
 
 class ModelMixinBase(object):
   @webapp2.cached_property
-  def self_parse_key(self):
+  def parsed_key(self):
     return self.__class__.parse_key(self.key)
 
 class User(ModelMixinBase):
@@ -25,7 +25,7 @@ class User(ModelMixinBase):
 
   @property
   def user_id(self):
-    return self.self_parse_key()
+    return self.parsed_key
 
 class Issue(ModelMixinBase):
   @classmethod
@@ -52,17 +52,17 @@ class Issue(ModelMixinBase):
 
   @property
   def project_key(self):
-    project_key, _will_start_at, _user = self.self_parse_key()
+    project_key, _will_start_at, _user = self.parsed_key
     return project_key
 
   @property
   def will_start_at(self):
-    _project_key, will_start_at, _user = self.self_parse_key()
+    _project_key, will_start_at, _user = self.parsed_key
     return will_start_at
 
   @property
   def user(self):
-    _project_key, _will_start_at, user = self.self_parse_key()
+    _project_key, _will_start_at, user = self.parsed_key
     return user
 
 class WorkLoad(ModelMixinBase):
@@ -116,7 +116,7 @@ class WorkLoad(ModelMixinBase):
       _start_at,
       _project_name,
       _issue_subject,
-    ) = self.self_parse_key()
+    ) = self.parsed_key
     return project_key
 
   @property
@@ -127,7 +127,7 @@ class WorkLoad(ModelMixinBase):
       _start_at,
       _project_name,
       _issue_subject,
-    ) = self.self_parse_key()
+    ) = self.parsed_key
     return issue_key
 
   @property
@@ -138,7 +138,7 @@ class WorkLoad(ModelMixinBase):
       start_at,
       _project_name,
       _issue_subject,
-    ) = self.self_parse_key()
+    ) = self.parsed_key
     return start_at
 
   @property
@@ -149,7 +149,7 @@ class WorkLoad(ModelMixinBase):
       _start_at,
       project_name,
       _issue_subject,
-    ) = self.self_parse_key()
+    ) = self.parsed_key
     return project_name
 
   @property
@@ -160,7 +160,7 @@ class WorkLoad(ModelMixinBase):
       _start_at,
       _project_name,
       issue_subject,
-    ) = self.self_parse_key()
+    ) = self.parsed_key
     return issue_subject
 
 class Comment(ModelMixinBase):
