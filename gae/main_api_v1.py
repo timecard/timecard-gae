@@ -30,7 +30,6 @@ class User(remote.Service):
     items = list()
     entities = yield model.User.query().fetch_async()
     for user in entities:
-      user.set_from_key() #TODO
       items.append(message.UserSend(user_id=user.user_id, name=user.name))
     raise ndb.Return(message.UserSendCollection(items=items))
 
