@@ -87,9 +87,33 @@ class Project(tap.endpoints.CRUDService):
   def list(self, _request):
     return message.ProjectSendCollection()
 
-  @endpoints.method(message_types.VoidMessage, message.ProjectSend, name="create")
-  def create(self, _request):
-    return message.ProjectSendCollection()
+  @endpoints.method(message.ProjectReceive, message.ProjectSend)
+  @ndb.synctasklet
+  def create(self, request):
+    session_user = tap.endpoints.get_user_from_endpoints_service(self)
+    if session_user is None:
+      raise
+    key = ndb.Key(model.User, session_user.user_id())
+    user = yield key.get_async()
+    if user is None:
+      raise
+
+    project = model.Project(
+      name        = request.name       ,
+      description = request.description,
+      is_public   = request.is_public  ,
+    )
+    _project_key = yield project.put_async()
+
+    raise ndb.Return(message.ProjectSend(
+      name        = project.name       ,
+      description = project.description,
+      is_public   = project.is_public  ,
+      closed      = project.closed     ,
+      archive     = project.archive    ,
+      admin       = project.admin      ,
+      member      = project.member     ,
+    ))
 
   @endpoints.method(message_types.VoidMessage, message.ProjectSend)
   def read(self, _request):
