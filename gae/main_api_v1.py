@@ -38,13 +38,20 @@ class User(tap.endpoints.CRUDService):
   @ndb.synctasklet
   def create(self, request):
     session_user = tap.endpoints.get_user_from_endpoints_service(self)
+    if session_user is None:
+      raise
     key = ndb.Key(model.User, session_user.user_id())
     user = yield key.get_async()
     if user is not None:
       raise
-    user.name = session_user.name
-    yield user.put_async()
-    raise ndb.Return(message.UserSend(user_id=user.user_id(), name=user.name))
+    user.name = request.name
+    user.language = request.language
+    future = user.put_async()
+    if future.check_success():
+      raise future.get_exception()
+    raise ndb.Return(message.UserSend(user_id=user.user_id,
+                                      name=user.name,
+                                      language=user.language))
 
   @endpoints.method(message_types.VoidMessage, message.UserSend)
   def read(self, _request):
