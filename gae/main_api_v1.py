@@ -58,8 +58,23 @@ class User(tap.endpoints.CRUDService):
     return message.UserSendCollection()
 
   @endpoints.method(message.UserReceive, message.UserSend)
-  def update(self, _request):
-    return message.UserSendCollection()
+  @ndb.synctasklet
+  def update(self, request):
+    session_user = tap.endpoints.get_user_from_endpoints_service(self)
+    if session_user is None:
+      raise
+    key = ndb.Key(model.User, session_user.user_id())
+    user = yield key.get_async()
+    if user is None:
+      raise
+    user.name = request.name
+    user.language = request.language
+    future = user.put_async()
+    if future.check_success():
+      raise future.get_exception()
+    raise ndb.Return(message.UserSend(user_id=user.user_id,
+                                      name=user.name,
+                                      language=user.language))
 
   @endpoints.method(message_types.VoidMessage, message.UserSend)
   def delete(self, _request):
