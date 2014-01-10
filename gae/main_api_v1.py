@@ -83,9 +83,22 @@ class User(tap.endpoints.CRUDService):
 @api.api_class(resource_name="project", path="project")
 class Project(tap.endpoints.CRUDService):
 
-  @endpoints.method(message_types.VoidMessage, message.ProjectSend)
+  @endpoints.method(message_types.VoidMessage, message.ProjectSendCollection)
+  @ndb.synctasklet
   def list(self, _request):
-    return message.ProjectSendCollection()
+    items = list()
+    entities = yield model.Project.query().fetch_async()
+    for project in entities:
+      items.append(message.ProjectSend(
+        name        = project.name       ,
+        description = project.description,
+        is_public   = project.is_public  ,
+        closed      = project.closed     ,
+        archive     = project.archive    ,
+        admin       = project.admin      ,
+        member      = project.member     ,
+      ))
+    raise ndb.Return(message.ProjectSendCollection(items=items))
 
   @endpoints.method(message.ProjectReceive, message.ProjectSend)
   @ndb.synctasklet
