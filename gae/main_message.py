@@ -64,3 +64,23 @@ class IssueSend(messages.Message):
 
 class IssueSendCollection(messages.Message):
   items = messages.MessageField(IssueSend, 1, repeated=True)
+
+
+class WorkLoadReceiveNew(messages.Message):
+  issue         = messages.StringField       (1, required=True)
+
+class WorkLoadReceiveClose(messages.Message):
+  issue         = messages.StringField       (1, required=True)
+
+class WorkLoadSend(messages.Message):
+  issue         = messages.StringField       (1, required=True)
+  end_at        = message_types.DateTimeField(2, required=False)
+  user          = messages.IntegerField      (3, required=True)
+  active        = messages.BooleanField      (4, required=True)
+  project       = messages.IntegerField      (5, required=True)
+  start_at      = message_types.DateTimeField(6, required=False)
+  project_name  = messages.StringField       (7, required=True)
+  issue_subject = messages.StringField       (8, required=True)
+
+class WorkLoadSendCollection(messages.Message):
+  items = messages.MessageField(WorkLoadSend, 1, repeated=True)
