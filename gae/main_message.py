@@ -40,7 +40,7 @@ class ProjectSendCollection(messages.Message):
 
 
 class IssueReceiveNew(messages.Message):
-  project       = messages.StringField       (1, required=True)
+  project       = messages.IntegerField      (1, required=True)
   subject       = messages.StringField       (2, required=True)
   description   = messages.StringField       (3, default="")
   assignee      = messages.StringField       (4, required=False)
@@ -50,17 +50,17 @@ class IssueReceive(messages.Message):
   description   = messages.StringField       (3, default="")
   assignee      = messages.StringField       (4, required=False)
   closed_on     = message_types.DateTimeField(5, required=False)
-  key           = messages.IntegerField      (6, required=True)
+  key           = messages.StringField       (6, required=True)
 
 class IssueSend(messages.Message):
-  project       = messages.StringField       (1, required=True)
+  project       = messages.IntegerField      (1, required=True)
   subject       = messages.StringField       (2, required=True)
   description   = messages.StringField       (3, required=True)
   assignee      = messages.StringField       (4, required=False)
-  key           = messages.IntegerField      (5, required=True)
+  key           = messages.StringField       (5, required=True)
   closed_on     = message_types.DateTimeField(6, required=False)
   will_start_at = message_types.DateTimeField(7, required=True)
-  author        = messages.StringField       (8, required=True)
+  author        = messages.IntegerField      (8, required=True)
 
 class IssueSendCollection(messages.Message):
   items = messages.MessageField(IssueSend, 1, repeated=True)
