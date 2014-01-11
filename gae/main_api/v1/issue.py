@@ -81,3 +81,39 @@ class Issue(tap.endpoints.CRUDService):
       will_start_at = issue.will_start_at,
       author        = issue.author_key.integer_id()       ,
     ))
+
+  @endpoints.method(message.IssueReceive, message.IssueSend)
+  @ndb.synctasklet
+  def update(self, request):
+    session_user = tap.endpoints.get_user_from_endpoints_service(self)
+    if session_user is None:
+      raise
+
+    user_key = ndb.Key(model.User, session_user.user_id())
+    issue_key = ndb.Key(model.Issue, request.key)
+    project_key, _will_start_at, _user_id, _name = model.Issue.parse_key(issue_key)
+    user, issue, project = yield ndb.get_multi_async((user_key, issue_key, project_key))
+
+    if not user:
+      raise
+    if not issue:
+      raise
+    if user.key not in project.member:
+      raise
+
+    issue.subject     = request.subject
+    issue.description = request.description
+    issue.closed_on   = request.closed_on
+    issue.assignee    = ndb.Key(model.User, int(request.assignee)) if issue.assignee else None
+    _issue_key = yield issue.put_async()
+
+    raise ndb.Return(message.IssueSend(
+      project       = issue.project_key.integer_id()  ,
+      subject       = issue.subject      ,
+      description   = issue.description  ,
+      assignee      = issue.assignee.integer_id() if issue.assignee else None     ,
+      key           = issue.key.string_id(),
+      closed_on     = issue.closed_on    ,
+      will_start_at = issue.will_start_at,
+      author        = issue.author_key.integer_id()       ,
+    ))
