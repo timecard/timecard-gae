@@ -90,6 +90,7 @@ class Project(tap.endpoints.CRUDService):
     entities = yield model.Project.query().fetch_async()
     for project in entities:
       items.append(message.ProjectSend(
+        key         = project.key.integer_id(),
         name        = project.name       ,
         description = project.description,
         is_public   = project.is_public  ,
@@ -100,7 +101,7 @@ class Project(tap.endpoints.CRUDService):
       ))
     raise ndb.Return(message.ProjectSendCollection(items=items))
 
-  @endpoints.method(message.ProjectReceive, message.ProjectSend)
+  @endpoints.method(message.ProjectReceiveNew, message.ProjectSend)
   @ndb.synctasklet
   def create(self, request):
     session_user = tap.endpoints.get_user_from_endpoints_service(self)
@@ -119,6 +120,7 @@ class Project(tap.endpoints.CRUDService):
     _project_key = yield project.put_async()
 
     raise ndb.Return(message.ProjectSend(
+      key         = project.key.integer_id(),
       name        = project.name       ,
       description = project.description,
       is_public   = project.is_public  ,
