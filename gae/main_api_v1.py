@@ -96,8 +96,8 @@ class Project(tap.endpoints.CRUDService):
         is_public   = project.is_public  ,
         closed      = project.closed     ,
         archive     = project.archive    ,
-        admin       = project.admin      ,
-        member      = project.member     ,
+        admin       = [key.string_id() for key in project.admin],
+        member      = [key.string_id() for key in project.member],
       ))
     raise ndb.Return(message.ProjectSendCollection(items=items))
 
@@ -116,6 +116,8 @@ class Project(tap.endpoints.CRUDService):
       name        = request.name       ,
       description = request.description,
       is_public   = request.is_public  ,
+      admin       = (user.key,)        ,
+      member      = (user.key,)        ,
     )
     _project_key = yield project.put_async()
 
@@ -126,8 +128,8 @@ class Project(tap.endpoints.CRUDService):
       is_public   = project.is_public  ,
       closed      = project.closed     ,
       archive     = project.archive    ,
-      admin       = project.admin      ,
-      member      = project.member     ,
+      admin       = [key.string_id() for key in project.admin],
+      member      = [key.string_id() for key in project.member],
     ))
 
   @endpoints.method(message_types.VoidMessage, message.ProjectSend)

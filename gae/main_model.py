@@ -22,13 +22,18 @@ class Project(ndb.Model):
 
   name = ndb.StringProperty(indexed=False, required=True)
   description = ndb.TextProperty(indexed=False, default="")
-  is_public = ndb.BooleanProperty(indexed=False, default=True)
+  is_public = ndb.BooleanProperty(indexed=True, default=True)
   closed = ndb.BooleanProperty(indexed=False, default=False)
   archive = ndb.BooleanProperty(indexed=False, default=False)
   admin = ndb.KeyProperty(indexed=True, kind=User, repeated=True) #required=True
-  member = ndb.KeyProperty(indexed=False, kind=User, repeated=True)
+  member = ndb.KeyProperty(indexed=True, kind=User, repeated=True)
   #github
   #ruffnote
+
+  def _pre_put_hook(self):
+    assert len(self.admin) > 0
+    assert len(self.member) > 0
+    assert set(self.admin).issubset(set(self.member))
 
 class ArchivedComment(ndb.Model):
   datetime = ndb.DateTimeProperty(indexed=False, required=True)
