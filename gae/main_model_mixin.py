@@ -61,7 +61,7 @@ class Issue(ModelMixinBase):
     return will_start_at
 
   @property
-  def user(self):
+  def author(self):
     _project_key, _will_start_at, user = self.parsed_key
     return user
 
