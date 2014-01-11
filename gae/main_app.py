@@ -8,7 +8,7 @@ from js.angular import angular
 from js.bootstrap import bootstrap
 import webapp2
 
-import main_api_v1 as api
+import main_api.v1 as api
 import main_model as model
 
 class BaseHandler(tap.RequestHandler):
