@@ -17,7 +17,7 @@ class User(ModelMixinBase):
     argv = (
       user.user_id(),
     )
-    return ndb.Key(cls, ":".join(argv))
+    return ndb.Key("User", ":".join(argv))
 
   @classmethod
   def parse_key(cls, key):
@@ -29,16 +29,16 @@ class User(ModelMixinBase):
 
 class Issue(ModelMixinBase):
   @classmethod
-  def gen_key(cls, project_key, will_start_at, author):
+  def gen_key(cls, project_key, will_start_at, author_id, author_name):
     if not isinstance(will_start_at, str):
       will_start_at = str(int(time.mktime(will_start_at.timetuple())))
     argv = (
       str(project_key.integer_id()),
       will_start_at,
-      author.user_id,
-      author.name,
+      author_id,
+      author_name,
     )
-    return ndb.Key(cls, "/".join(argv))
+    return ndb.Key("Issue", "/".join(argv))
 
   @classmethod
   def parse_key(cls, key):
@@ -77,8 +77,8 @@ class WorkLoad(ModelMixinBase):
   @ndb.synctasklet
   def gen_key(cls, project_key, issue_key, start_at):
     project, issue = yield ndb.get_multi_async((project_key, issue_key))
-    project_id, will_start_at, user_id, name = key.string_id().split("/", 3)
-    start_at = str(int(time.mktime(datetime.now().timetuple()))),
+    project_id, will_start_at, user_id, name = issue.key.string_id().split("/", 3)
+    start_at = str(int(time.mktime(datetime.now().timetuple())))
     project_name = project.name
     issue_subject = issue.subject
     argv = (
@@ -90,7 +90,7 @@ class WorkLoad(ModelMixinBase):
       project_name,
       issue_subject,
     )
-    raise ndb.Return(ndb.Key(cls, "/".join(argv)))
+    raise ndb.Return(ndb.Key("WorkLoad", "/".join(argv)))
 
   @classmethod
   def parse_key(cls, key):
@@ -104,11 +104,10 @@ class WorkLoad(ModelMixinBase):
       issue_subject,
     ) = key.string_id().split("/", 6)
 
-    project_key = ndb.Key("Project", project_id),
-    author = User(ndb.Key("User", user_id), name=name)
+    project_key = ndb.Key("Project", int(project_id))
     result = (
       project_key,
-      Issue.gen_key(project_key, will_start_at, author), # issue_key
+      Issue.gen_key(project_key, will_start_at, user_id, name), # issue_key
       datetime.fromtimestamp(int(start_at)),  # start_at
       project_name,
       issue_subject,
@@ -116,7 +115,7 @@ class WorkLoad(ModelMixinBase):
     return result
 
   @property
-  def project(self):
+  def project_key(self):
     (
       project_key,
       _issue_key,
@@ -127,7 +126,7 @@ class WorkLoad(ModelMixinBase):
     return project_key
 
   @property
-  def issue(self):
+  def issue_key(self):
     (
       _project_key,
       issue_key,
@@ -183,7 +182,7 @@ class Comment(ModelMixinBase):
       str(int(time.mktime(datetime.now().timetuple()))), #time_at
       author_name,
     )
-    raise ndb.Return(ndb.Key(cls, "/".join(argv)))
+    raise ndb.Return(ndb.Key("Comment", "/".join(argv)))
 
   @classmethod
   def parse_key(cls, key):
@@ -196,10 +195,9 @@ class Comment(ModelMixinBase):
       author_name,
     ) = key.string_id().split("/", 5)
 
-    project_key = ndb.Key("Project", project_id),
-    author = User(ndb.Key("User", user_id), name=name)
+    project_key = ndb.Key("Project", int(project_id))
     result = (
-      Issue.gen_key(project_key, will_start_at, author), # issue_key
+      Issue.gen_key(project_key, will_start_at, user_id, author_name), # issue_key
       author_name,
     )
     return result
