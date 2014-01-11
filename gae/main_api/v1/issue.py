@@ -82,6 +82,10 @@ class Issue(tap.endpoints.CRUDService):
       author        = issue.author_key.integer_id()       ,
     ))
 
+  @endpoints.method(message_types.VoidMessage, message.IssueSend)
+  def read(self, _request):
+    return message.IssueSendCollection()
+
   @endpoints.method(message.IssueReceive, message.IssueSend)
   @ndb.synctasklet
   def update(self, request):
@@ -117,3 +121,7 @@ class Issue(tap.endpoints.CRUDService):
       will_start_at = issue.will_start_at,
       author        = issue.author_key.integer_id()       ,
     ))
+
+  @endpoints.method(message_types.VoidMessage, message.IssueSend)
+  def delete(self, _request):
+    return message.IssueSendCollection()
