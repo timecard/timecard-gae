@@ -25,11 +25,11 @@ class Issue(tap.endpoints.CRUDService):
         project       = issue.project_key.integer_id()      ,
         subject       = issue.subject      ,
         description   = issue.description  ,
-        assignee      = issue.assignee.integer_id()     ,
+        assignee      = issue.assignee.integer_id() if issue.assignee else None     ,
         key           = issue.key.string_id()          ,
         closed_on     = issue.closed_on    ,
         will_start_at = issue.will_start_at,
-        author        = issue.author.key.integer_id()       ,
+        author        = issue.author_key.integer_id()       ,
       ))
     raise ndb.Return(message.IssueSendCollection(items=items))
 
