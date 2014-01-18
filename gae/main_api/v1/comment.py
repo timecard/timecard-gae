@@ -28,3 +28,41 @@ class Comment(tap.endpoints.CRUDService):
         author_name   = comment.author_name,
       ))
     raise ndb.Return(message.CommentSendCollection(items=items))
+
+  @endpoints.method(message.CommentReceive, message.CommentSend)
+  @ndb.synctasklet
+  def create(self, request):
+    session_user = tap.endpoints.get_user_from_endpoints_service(self)
+    if session_user is None:
+      raise
+
+    user_id = session_user.user_id()
+    user_key = ndb.Key(model.User, user_id)
+    issue_key = ndb.Key(model.Issue, request.issue)
+    project_key, _will_start_at, _user_id, _name = model.Issue.parse_key(issue_key)
+    user, issue, project = yield ndb.get_multi_async((user_key, issue_key, project_key))
+
+    if not user:
+      raise
+    if not issue:
+      raise
+    if not project:
+      raise
+    if user.key not in project.member:
+      raise
+
+    time_at = datetime.now()
+    comment = model.Comment(
+      key  = model.Comment.gen_key(issue_key, time_at, user_key, user.name),
+      body = request.body,
+    )
+    _comment_key = yield comment.put_async()
+
+    raise ndb.Return(message.CommentSend(
+      body          = comment.body,
+      issue         = comment.issue_key.string_id(),
+      project       = comment.project_key.integer_id(),
+      time_at       = comment.time_at,
+      author        = comment.author_key.string_id(),
+      author_name   = comment.author_name,
+    ))
