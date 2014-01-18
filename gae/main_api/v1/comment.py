@@ -69,6 +69,10 @@ class Comment(tap.endpoints.CRUDService):
       author_name   = comment.author_name,
     ))
 
+  @endpoints.method(message_types.VoidMessage, message.CommentSend)
+  def read(self, _request):
+    return message.CommentSendCollection()
+
   @endpoints.method(message.CommentReceiveUpdate, message.CommentSend)
   @ndb.synctasklet
   def update(self, request):
@@ -98,3 +102,7 @@ class Comment(tap.endpoints.CRUDService):
       author        = comment.author_key.string_id(),
       author_name   = comment.author_name,
     ))
+
+  @endpoints.method(message_types.VoidMessage, message.CommentSend)
+  def delete(self, _request):
+    return message.CommentSendCollection()
