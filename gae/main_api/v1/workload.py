@@ -75,3 +75,38 @@ class WorkLoad(tap.endpoints.CRUDService):
       project_name  = workload.project_name,
       issue_subject = workload.issue_subject,
     ))
+
+  @endpoints.method(message.WorkLoadReceiveClose, message.WorkLoadSend)
+  @ndb.synctasklet
+  def update(self, _request):
+    session_user = tap.endpoints.get_user_from_endpoints_service(self)
+    if session_user is None:
+      raise
+
+    user_key = ndb.Key(model.User, session_user.user_id())
+    user = yield user_key.get_async()
+
+    if not user:
+      raise
+
+    query = model.WorkLoad.query(ndb.AND(model.WorkLoad.user == user_key,
+                                         model.WorkLoad.active == True))
+    workload = yield query.get_async()
+
+    if not workload:
+      raise
+
+    workload.end_at = datetime.now()
+    workload.active = False
+    _workload_key = yield workload.put_async()
+
+    raise ndb.Return(message.WorkLoadSend(
+      issue         = workload.issue_key.string_id(),
+      end_at        = workload.end_at,
+      user          = workload.user.string_id(),
+      active        = workload.active,
+      project       = workload.project_key.integer_id(),
+      start_at      = workload.start_at,
+      project_name  = workload.project_name,
+      issue_subject = workload.issue_subject,
+    ))

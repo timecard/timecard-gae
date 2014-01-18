@@ -70,17 +70,17 @@ class WorkLoadReceiveNew(messages.Message):
   issue         = messages.StringField       (1, required=True)
 
 class WorkLoadReceiveClose(messages.Message):
-  issue         = messages.StringField       (1, required=True)
+  pass
 
 class WorkLoadSend(messages.Message):
   issue         = messages.StringField       (1, required=True)
-  end_at        = message_types.DateTimeField(2, required=False)
-  user          = messages.StringField       (3, required=True)
-  active        = messages.BooleanField      (4, required=True)
-  project       = messages.IntegerField      (5, required=True)
-  start_at      = message_types.DateTimeField(6, required=False)
-  project_name  = messages.StringField       (7, required=True)
-  issue_subject = messages.StringField       (8, required=True)
+  end_at        = message_types.DateTimeField(3, required=False)
+  user          = messages.StringField       (4, required=True)
+  active        = messages.BooleanField      (5, required=True)
+  project       = messages.IntegerField      (6, required=True)
+  start_at      = message_types.DateTimeField(7, required=False)
+  project_name  = messages.StringField       (8, required=True)
+  issue_subject = messages.StringField       (9, required=True)
 
 class WorkLoadSendCollection(messages.Message):
   items = messages.MessageField(WorkLoadSend, 1, repeated=True)
