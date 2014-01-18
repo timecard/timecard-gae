@@ -3,3 +3,4 @@ from .user import *
 from .project import *
 from .issue import *
 from .workload import *
+from .comment import *

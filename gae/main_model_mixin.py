@@ -347,14 +347,15 @@ class WorkLoad(ModelMixinBase):
 class Comment(ModelMixinBase):
   @classmethod
   @ndb.synctasklet
-  def gen_key(cls, issue_key, author_name):
+  def gen_key(cls, issue_key, time_at, author_key, author_name):
     project_id, will_start_at, user_id, name = issue_key.string_id().split("/", 3)
     argv = (
       project_id,
       will_start_at,
       user_id,
       name,
-      str(int(time.mktime(datetime.now().timetuple()))), #time_at
+      str(int(time.mktime(time_at.timetuple()))), #time_at
+      author_key.string_id(), # author_id
       author_name,
     )
     raise ndb.Return(ndb.Key("Comment", "/".join(argv)))
@@ -367,37 +368,66 @@ class Comment(ModelMixinBase):
       user_id,
       name,
       time_at,
+      author_id,
       author_name,
-    ) = key.string_id().split("/", 5)
+    ) = key.string_id().split("/", 6)
 
     project_key = ndb.Key("Project", int(project_id))
     result = (
       Issue.gen_key(project_key, will_start_at, user_id, author_name), # issue_key
+      datetime.fromtimestamp(int(time_at)), # time_at
+      ndb.Key("User", author_id), # author_key
       author_name,
     )
     return result
 
   @property
-  def issue(self):
+  def issue_key(self):
     (
       issue_key,
+      _time_at,
+      _author_key,
       _author_name,
     ) = self.__class__.parse_key(self.key)
     return issue_key
 
   @property
+  def time_at(self):
+    (
+      _issue_key,
+      time_at,
+      _author_key,
+      _author_name,
+    ) = self.__class__.parse_key(self.key)
+    return time_at
+
+  @property
+  def author_key(self):
+    (
+      _issue_key,
+      _time_at,
+      author_key,
+      _author_name,
+    ) = self.__class__.parse_key(self.key)
+    return author_key
+
+  @property
   def author_name(self):
     (
       _issue_key,
+      _time_at,
+      _author_key,
       author_name,
     ) = self.__class__.parse_key(self.key)
     return author_name
 
   @property
-  def project(self):
+  def project_key(self):
     (
       issue_key,
+      _time_at,
+      _author_key,
       _author_name,
     ) = self.__class__.parse_key(self.key)
-    project_key, _will_start_at, _user = Issue.parse_key(issue_key)
+    project_key, _will_start_at, _user_key, _user_name = Issue.parse_key(issue_key)
     return project_key
