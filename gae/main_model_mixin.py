@@ -72,43 +72,50 @@ class Issue(ModelMixinBase):
     _project_key, _will_start_at, _user_id, name = self.parsed_key
     return name
 
-class WorkLoad(ModelMixinBase):
+class ActiveWorkLoad(ModelMixinBase):
   @classmethod
   @ndb.synctasklet
-  def gen_key(cls, project_key, issue_key, start_at):
+  def gen_key(cls, project_key, issue_key, start_at, user_key, user_name):
     project, issue = yield ndb.get_multi_async((project_key, issue_key))
-    project_id, will_start_at, user_id, name = issue.key.string_id().split("/", 3)
-    start_at = str(int(time.mktime(datetime.now().timetuple())))
+    project_id, will_start_at, author_id, author_name = issue.key.string_id().split("/", 3)
+    start_at = str(int(time.mktime(start_at.timetuple())))
     project_name = project.name
     issue_subject = issue.subject
+    user_id = user_key.string_id()
     argv = (
+      user_id,
       project_id,
       will_start_at,
-      user_id,
-      name,
+      author_id,
+      author_name,
       start_at,
       project_name,
       issue_subject,
+      user_name,
     )
-    raise ndb.Return(ndb.Key("WorkLoad", "/".join(argv)))
+    raise ndb.Return(ndb.Key("ActiveWorkLoad", "/".join(argv)))
 
   @classmethod
   def parse_key(cls, key):
     (
+      user_id,
       project_id,
       will_start_at,
-      user_id,
-      name,
+      author_id,
+      author_name,
       start_at,
       project_name,
       issue_subject,
-    ) = key.string_id().split("/", 6)
+      user_name,
+    ) = key.string_id().split("/", 8)
 
     project_key = ndb.Key("Project", int(project_id))
     result = (
       project_key,
-      Issue.gen_key(project_key, will_start_at, user_id, name), # issue_key
+      Issue.gen_key(project_key, will_start_at, author_id, author_name), # issue_key
       datetime.fromtimestamp(int(start_at)),  # start_at
+      ndb.Key("User", user_id), # user_key
+      user_name,
       project_name,
       issue_subject,
     )
@@ -120,6 +127,8 @@ class WorkLoad(ModelMixinBase):
       project_key,
       _issue_key,
       _start_at,
+      _user_key,
+      _user_name,
       _project_name,
       _issue_subject,
     ) = self.parsed_key
@@ -131,6 +140,8 @@ class WorkLoad(ModelMixinBase):
       _project_key,
       issue_key,
       _start_at,
+      _user_key,
+      _user_name,
       _project_name,
       _issue_subject,
     ) = self.parsed_key
@@ -142,10 +153,38 @@ class WorkLoad(ModelMixinBase):
       _project_key,
       _issue_key,
       start_at,
+      _user_key,
+      _user_name,
       _project_name,
       _issue_subject,
     ) = self.parsed_key
     return start_at
+
+  @property
+  def user_key(self):
+    (
+      _project_key,
+      _issue_key,
+      _start_at,
+      user_key,
+      _user_name,
+      _project_name,
+      _issue_subject,
+    ) = self.parsed_key
+    return user_key
+
+  @property
+  def user_name(self):
+    (
+      _project_key,
+      _issue_key,
+      _start_at,
+      _user_key,
+      user_name,
+      _project_name,
+      _issue_subject,
+    ) = self.parsed_key
+    return user_name
 
   @property
   def project_name(self):
@@ -153,6 +192,8 @@ class WorkLoad(ModelMixinBase):
       _project_key,
       _issue_key,
       _start_at,
+      _user_key,
+      _user_name,
       project_name,
       _issue_subject,
     ) = self.parsed_key
@@ -164,6 +205,140 @@ class WorkLoad(ModelMixinBase):
       _project_key,
       _issue_key,
       _start_at,
+      _user_key,
+      _user_name,
+      _project_name,
+      issue_subject,
+    ) = self.parsed_key
+    return issue_subject
+
+class WorkLoad(ModelMixinBase):
+  @classmethod
+  @ndb.synctasklet
+  def gen_key(cls, project_key, issue_key, start_at, end_at):
+    project, issue = yield ndb.get_multi_async((project_key, issue_key))
+    project_id, will_start_at, user_id, name = issue.key.string_id().split("/", 3)
+    start_at = str(int(time.mktime(start_at.timetuple())))
+    end_at = str(int(time.mktime(end_at.timetuple())))
+    project_name = project.name
+    issue_subject = issue.subject
+    argv = (
+      project_id,
+      will_start_at,
+      end_at,
+      start_at,
+      user_id,
+      name,
+      project_name,
+      issue_subject,
+    )
+    raise ndb.Return(ndb.Key("WorkLoad", "/".join(argv)))
+
+  @classmethod
+  def parse_key(cls, key):
+    (
+      project_id,
+      will_start_at,
+      end_at,
+      start_at,
+      user_id,
+      name,
+      project_name,
+      issue_subject,
+    ) = key.string_id().split("/", 7)
+
+    project_key = ndb.Key("Project", int(project_id))
+    result = (
+      project_key,
+      Issue.gen_key(project_key, will_start_at, user_id, name), # issue_key
+      datetime.fromtimestamp(int(start_at)),  # start_at
+      datetime.fromtimestamp(int(end_at)),  # end_at
+      ndb.Key("User", user_id),
+      name,
+      project_name,
+      issue_subject,
+    )
+    return result
+
+  @property
+  def project_key(self):
+    (
+      project_key,
+      _issue_key,
+      _start_at,
+      _end_at,
+      _user_key,
+      _user_name,
+      _project_name,
+      _issue_subject,
+    ) = self.parsed_key
+    return project_key
+
+  @property
+  def issue_key(self):
+    (
+      _project_key,
+      issue_key,
+      _start_at,
+      _end_at,
+      _user_key,
+      _user_name,
+      _project_name,
+      _issue_subject,
+    ) = self.parsed_key
+    return issue_key
+
+  @property
+  def start_at(self):
+    (
+      _project_key,
+      _issue_key,
+      start_at,
+      _end_at,
+      _user_key,
+      _user_name,
+      _project_name,
+      _issue_subject,
+    ) = self.parsed_key
+    return start_at
+
+  @property
+  def end_at(self):
+    (
+      _project_key,
+      _issue_key,
+      _start_at,
+      end_at,
+      _user_key,
+      _user_name,
+      _project_name,
+      _issue_subject,
+    ) = self.parsed_key
+    return end_at
+
+  @property
+  def project_name(self):
+    (
+      _project_key,
+      _issue_key,
+      _start_at,
+      _end_at,
+      _user_key,
+      _user_name,
+      project_name,
+      _issue_subject,
+    ) = self.parsed_key
+    return project_name
+
+  @property
+  def issue_subject(self):
+    (
+      _project_key,
+      _issue_key,
+      _start_at,
+      _end_at,
+      _user_key,
+      _user_name,
       _project_name,
       issue_subject,
     ) = self.parsed_key

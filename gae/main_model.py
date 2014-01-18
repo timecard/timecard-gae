@@ -54,18 +54,28 @@ class Issue(ndb.Model, model_mixin.Issue):
   comment = ndb.LocalStructuredProperty(ArchivedComment, indexed=False, repeated=True, compressed=True)
   #closedしたらCommentを格納する
 
-class WorkLoad(ndb.Model, model_mixin.WorkLoad):
+class ActiveWorkLoad(ndb.Model, model_mixin.ActiveWorkLoad):
   #ユーザーは同時に複数のWorkLoadを作れない
+  #key
+  #user = ndb.KeyProperty(indexed=True, kind=User, required=True)
+  ##project = ndb.KeyProperty(indexed=True, kind=Project, required=True)
+  #issue = ndb.KeyProperty(indexed=True, kind=Issue, required=True)
+  #start_at = ndb.DateTimeProperty(indexed=False, auto_now_add=True)
+  #project_name = ndb.StringProperty(indexed=False, required=True)
+  #issue_subject = ndb.StringProperty(indexed=False, required=True)
+  pass
+
+class WorkLoad(ndb.Model, model_mixin.WorkLoad):
   #key
   ##project = ndb.KeyProperty(indexed=True, kind=Project, required=True)
   #issue = ndb.KeyProperty(indexed=True, kind=Issue, required=True)
   #start_at = ndb.DateTimeProperty(indexed=False, auto_now_add=True)
   #project_name = ndb.StringProperty(indexed=False, required=True)
   #issue_subject = ndb.StringProperty(indexed=False, required=True)
+  #end_at = ndb.DateTimeProperty(indexed=False)
+  #user = ndb.KeyProperty(indexed=True, kind=User, required=True)
 
-  end_at = ndb.DateTimeProperty(indexed=False)
   user = ndb.KeyProperty(indexed=True, kind=User, required=True)
-  active = ndb.BooleanProperty(indexed=True, default=True)
 
 class Comment(ndb.Model, model_mixin.Comment):
   #key

@@ -1,4 +1,5 @@
 from datetime import datetime
+import operator
 
 from google.appengine.ext import ndb
 from protorpc import (
@@ -25,7 +26,6 @@ class WorkLoad(tap.endpoints.CRUDService):
         issue         = workload.issue_key.string_id(),
         end_at        = workload.end_at,
         user          = workload.user.string_id(),
-        active        = workload.active,
         project       = workload.project_key.integer_id(),
         start_at      = workload.start_at,
         project_name  = workload.project_name,
@@ -40,7 +40,8 @@ class WorkLoad(tap.endpoints.CRUDService):
     if session_user is None:
       raise
 
-    user_key = ndb.Key(model.User, session_user.user_id())
+    user_id = session_user.user_id()
+    user_key = ndb.Key(model.User, user_id)
     issue_key = ndb.Key(model.Issue, request.issue)
     project_key, _will_start_at, _user_id, _name = model.Issue.parse_key(issue_key)
     user, issue, project = yield ndb.get_multi_async((user_key, issue_key, project_key))
@@ -54,27 +55,40 @@ class WorkLoad(tap.endpoints.CRUDService):
     if user.key not in project.member:
       raise
 
-    workload_key = model.WorkLoad.gen_key(
+    key_start = ndb.Key(model.ActiveWorkLoad, user_id)
+    key_end   = ndb.Key(model.ActiveWorkLoad, "{0}/\xff".format(user_id))
+    query = model.ActiveWorkLoad.query(ndb.AND(model.ActiveWorkLoad.key >= key_start,
+                                               model.ActiveWorkLoad.key <= key_end))
+    activeworkload = yield query.get_async()
+
+    if activeworkload:
+      raise
+
+    activeworkload_key = model.ActiveWorkLoad.gen_key(
       project_key = project_key,
       issue_key   = issue_key,
       start_at    = datetime.now(),
+      user_key    = user.key,
+      user_name   = user.name,
     )
-    workload = model.WorkLoad(
-      key  = workload_key ,
-      user = user_key,
+    activeworkload = model.ActiveWorkLoad(
+      key  = activeworkload_key ,
     )
-    _workload_key = yield workload.put_async()
+    _activeworkload_key = yield activeworkload.put_async()
 
     raise ndb.Return(message.WorkLoadSend(
-      issue         = workload.issue_key.string_id(),
-      end_at        = workload.end_at,
-      user          = workload.user.string_id(),
-      active        = workload.active,
-      project       = workload.project_key.integer_id(),
-      start_at      = workload.start_at,
-      project_name  = workload.project_name,
-      issue_subject = workload.issue_subject,
+      issue         = activeworkload.issue_key.string_id(),
+      end_at        = None,
+      user          = user.key.string_id(),
+      project       = activeworkload.project_key.integer_id(),
+      start_at      = activeworkload.start_at,
+      project_name  = activeworkload.project_name,
+      issue_subject = activeworkload.issue_subject,
     ))
+
+  @endpoints.method(message_types.VoidMessage, message.WorkLoadSend)
+  def read(self, _request):
+    return message.WorkLoadSendCollection()
 
   @endpoints.method(message.WorkLoadReceiveClose, message.WorkLoadSend)
   @ndb.synctasklet
@@ -83,30 +97,76 @@ class WorkLoad(tap.endpoints.CRUDService):
     if session_user is None:
       raise
 
-    user_key = ndb.Key(model.User, session_user.user_id())
+    user_id = session_user.user_id()
+    user_key = ndb.Key(model.User, user_id)
     user = yield user_key.get_async()
 
     if not user:
       raise
 
-    query = model.WorkLoad.query(ndb.AND(model.WorkLoad.user == user_key,
-                                         model.WorkLoad.active == True))
-    workload = yield query.get_async()
+    key_start = ndb.Key(model.ActiveWorkLoad, user_id)
+    key_end   = ndb.Key(model.ActiveWorkLoad, "{0}/\xff".format(user_id))
+    query = model.ActiveWorkLoad.query(ndb.AND(model.ActiveWorkLoad.key >= key_start,
+                                               model.ActiveWorkLoad.key <= key_end))
+    activeworkload_key_list = yield query.fetch_async(keys_only=True)
 
-    if not workload:
+    if not activeworkload_key_list:
       raise
 
-    workload.end_at = datetime.now()
-    workload.active = False
-    _workload_key = yield workload.put_async()
+    activeworkload_list = list()
+    for activeworkload_key in activeworkload_key_list:
+      (
+        project_key,
+        issue_key,
+        start_at,
+        user_key,
+        user_name,
+        project_name,
+        issue_subject,
+      ) = model.ActiveWorkLoad.parse_key(activeworkload_key)
+      activeworkload_list.append((activeworkload_key, start_at,
+                                  project_key,
+                                  issue_key,
+                                  user_key,
+                                  user_name,
+                                  project_name,
+                                  issue_subject,
+                                 ))
+    start_at = None
+    end_at = datetime.now()
+    workload_list = list()
+    for activeworkload in sorted(activeworkload_list, key=operator.itemgetter(1), reverse=True):
+      (activeworkload_key, start_at,
+       project_key,
+       issue_key,
+       user_key,
+       user_name,
+       project_name,
+       issue_subject,
+      ) = activeworkload
+      workload_list.append(model.WorkLoad(
+        key = model.WorkLoad.gen_key(project_key, issue_key, start_at, start_at or end_at),
+        user = user_key,
+      ))
+
+    @ndb.transactional(xg=True)
+    @ndb.synctasklet
+    def transaction():
+      _activeworkload_key = yield ndb.delete_multi_async(activeworkload_key_list)
+      _workload_key = yield ndb.put_multi_async(workload_list)
+
+    transaction()
 
     raise ndb.Return(message.WorkLoadSend(
-      issue         = workload.issue_key.string_id(),
-      end_at        = workload.end_at,
-      user          = workload.user.string_id(),
-      active        = workload.active,
-      project       = workload.project_key.integer_id(),
-      start_at      = workload.start_at,
-      project_name  = workload.project_name,
-      issue_subject = workload.issue_subject,
+      issue         = issue_key.string_id(),
+      end_at        = end_at,
+      user          = user_key.string_id(),
+      project       = project_key.integer_id(),
+      start_at      = start_at,
+      project_name  = project_name,
+      issue_subject = issue_subject,
     ))
+
+  @endpoints.method(message_types.VoidMessage, message.WorkLoadSend)
+  def delete(self, _request):
+    return message.WorkLoadSendCollection()
