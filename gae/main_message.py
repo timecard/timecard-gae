@@ -92,13 +92,18 @@ class CommentReceive(messages.Message):
   issue         = messages.StringField       (1, required=True)
   body          = messages.StringField       (2, required=True)
 
+class CommentReceiveUpdate(messages.Message):
+  body          = messages.StringField       (2, required=True)
+  key           = messages.StringField       (3, required=True)
+
 class CommentSend(messages.Message):
-  body          = messages.StringField       (1, required=True)
-  issue         = messages.StringField       (2, required=True)
-  project       = messages.IntegerField      (3, required=True)
-  time_at       = message_types.DateTimeField(4, required=True)
-  author        = messages.StringField       (5, required=True)
-  author_name   = messages.StringField       (6, required=True)
+  issue         = messages.StringField       (1, required=True)
+  body          = messages.StringField       (2, required=True)
+  key           = messages.StringField       (3, required=True)
+  project       = messages.IntegerField      (4, required=True)
+  time_at       = message_types.DateTimeField(5, required=True)
+  author        = messages.StringField       (6, required=True)
+  author_name   = messages.StringField       (7, required=True)
 
 class CommentSendCollection(messages.Message):
   items = messages.MessageField(CommentSend, 1, repeated=True)

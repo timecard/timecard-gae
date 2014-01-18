@@ -20,8 +20,9 @@ class Comment(tap.endpoints.CRUDService):
     entities = yield model.Comment.query().fetch_async()
     for comment in entities:
       items.append(message.CommentSend(
-        body          = comment.body,
         issue         = comment.issue_key.string_id(),
+        body          = comment.body,
+        key           = comment.key.string_id(),
         project       = comment.project_key.integer_id(),
         time_at       = comment.time_at,
         author        = comment.author_key.string_id(),
@@ -59,7 +60,14 @@ class Comment(tap.endpoints.CRUDService):
     _comment_key = yield comment.put_async()
 
     raise ndb.Return(message.CommentSend(
+      issue         = comment.issue_key.string_id(),
       body          = comment.body,
+      key           = comment.key.string_id(),
+      project       = comment.project_key.integer_id(),
+      time_at       = comment.time_at,
+      author        = comment.author_key.string_id(),
+      author_name   = comment.author_name,
+    ))
       issue         = comment.issue_key.string_id(),
       project       = comment.project_key.integer_id(),
       time_at       = comment.time_at,
