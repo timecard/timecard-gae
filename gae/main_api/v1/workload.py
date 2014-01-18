@@ -15,6 +15,24 @@ from .api import api
 @api.api_class(resource_name="workload", path="workload")
 class WorkLoad(tap.endpoints.CRUDService):
 
+  @endpoints.method(message_types.VoidMessage, message.WorkLoadSendCollection)
+  @ndb.synctasklet
+  def list(self, _request):
+    items = list()
+    entities = yield model.WorkLoad.query().fetch_async()
+    for workload in entities:
+      items.append(message.WorkLoadSend(
+        issue         = workload.issue_key.string_id(),
+        end_at        = workload.end_at,
+        user          = workload.user.string_id(),
+        active        = workload.active,
+        project       = workload.project_key.integer_id(),
+        start_at      = workload.start_at,
+        project_name  = workload.project_name,
+        issue_subject = workload.issue_subject,
+      ))
+    raise ndb.Return(message.WorkLoadSendCollection(items=items))
+
   @endpoints.method(message.WorkLoadReceiveNew, message.WorkLoadSend)
   @ndb.synctasklet
   def create(self, request):
