@@ -66,6 +66,9 @@ class IssueSendCollection(messages.Message):
   items = messages.MessageField(IssueSend, 1, repeated=True)
 
 
+class WorkLoadReceive(messages.Message):
+  active        = messages.BooleanField      (1, required=False)
+
 class WorkLoadReceiveNew(messages.Message):
   issue         = messages.StringField       (1, required=True)
 

@@ -161,7 +161,7 @@ class ActiveWorkLoad(ModelMixinBase):
     return start_at
 
   @property
-  def user_key(self):
+  def user(self):
     (
       _project_key,
       _issue_key,

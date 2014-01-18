@@ -16,15 +16,19 @@ from .api import api
 @api.api_class(resource_name="workload", path="workload")
 class WorkLoad(tap.endpoints.CRUDService):
 
-  @endpoints.method(message_types.VoidMessage, message.WorkLoadSendCollection)
+  @endpoints.method(message.WorkLoadReceive, message.WorkLoadSendCollection)
   @ndb.synctasklet
-  def list(self, _request):
+  def list(self, request):
     items = list()
-    entities = yield model.WorkLoad.query().fetch_async()
+    if request.active:
+      query = model.ActiveWorkLoad.query()
+    else:
+      query = model.WorkLoad.query()
+    entities = yield query.fetch_async()
     for workload in entities:
       items.append(message.WorkLoadSend(
         issue         = workload.issue_key.string_id(),
-        end_at        = workload.end_at,
+        end_at        = workload.end_at if hasattr(workload, "end_at") else None,
         user          = workload.user.string_id(),
         project       = workload.project_key.integer_id(),
         start_at      = workload.start_at,
