@@ -143,6 +143,48 @@ class WorkLoad(tap.endpoints.CRUDService):
       user_name     = activeworkload.user_name,
     ))
 
+  @endpoints.method(message_types.VoidMessage, message.WorkLoadSend)
+  @ndb.synctasklet
+  def get(self, _request):
+    session_user = self._get_user()
+    if session_user is None:
+      raise endpoints.UnauthorizedException()
+
+    user_id = session_user.user_id()
+    user_key = ndb.Key(model.User, user_id)
+    user = yield user_key.get_async()
+
+    if not user:
+      raise endpoints.UnauthorizedException()
+
+    key_start = ndb.Key(model.ActiveWorkLoad, user_id)
+    query = model.ActiveWorkLoad.query(ndb.AND(model.ActiveWorkLoad.key >= key_start))
+    activeworkload_key = yield query.get_async(keys_only=True)
+
+    if not activeworkload_key:
+      raise endpoints.ForbiddenException()
+
+    (
+      project_key,
+      issue_key,
+      start_at,
+      user_key,
+      user_name,
+      project_name,
+      issue_subject,
+    ) = model.ActiveWorkLoad.parse_key(activeworkload_key)
+
+    raise ndb.Return(message.WorkLoadSend(
+      issue         = issue_key.string_id(),
+      end_at        = None,
+      user          = user_key.string_id(),
+      project       = project_key.integer_id(),
+      start_at      = start_at,
+      project_name  = project_name,
+      issue_subject = issue_subject,
+      user_name     = user_name,
+    ))
+
   @endpoints.method(message.WorkLoadReceiveClose, message.WorkLoadSend)
   @ndb.synctasklet
   def update(self, _request):
