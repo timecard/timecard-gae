@@ -90,10 +90,6 @@ class WorkLoad(tap.endpoints.CRUDService):
       issue_subject = activeworkload.issue_subject,
     ))
 
-  @endpoints.method(message_types.VoidMessage, message.WorkLoadSend)
-  def read(self, _request):
-    return message.WorkLoadSendCollection()
-
   @endpoints.method(message.WorkLoadReceiveClose, message.WorkLoadSend)
   @ndb.synctasklet
   def update(self, _request):
@@ -170,7 +166,3 @@ class WorkLoad(tap.endpoints.CRUDService):
       project_name  = project_name,
       issue_subject = issue_subject,
     ))
-
-  @endpoints.method(message_types.VoidMessage, message.WorkLoadSend)
-  def delete(self, _request):
-    return message.WorkLoadSendCollection()

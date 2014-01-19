@@ -71,10 +71,6 @@ class Comment(tap.endpoints.CRUDService):
       update_at     = comment.update_at if hasattr(comment, "update_at") else None,
     ))
 
-  @endpoints.method(message_types.VoidMessage, message.CommentSend)
-  def read(self, _request):
-    return message.CommentSendCollection()
-
   @endpoints.method(message.CommentReceiveUpdate, message.CommentSend)
   @ndb.synctasklet
   def update(self, request):
@@ -108,7 +104,3 @@ class Comment(tap.endpoints.CRUDService):
       author_name   = comment.author_name,
       update_at     = comment.update_at if hasattr(comment, "update_at") else None,
     ))
-
-  @endpoints.method(message_types.VoidMessage, message.CommentSend)
-  def delete(self, _request):
-    return message.CommentSendCollection()

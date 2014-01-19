@@ -62,10 +62,6 @@ class Project(tap.endpoints.CRUDService):
       member      = [key.string_id() for key in project.member],
     ))
 
-  @endpoints.method(message_types.VoidMessage, message.ProjectSend)
-  def read(self, _request):
-    return message.ProjectSendCollection()
-
   @endpoints.method(message.ProjectReceive, message.ProjectSend)
   @ndb.synctasklet
   def update(self, request):
@@ -103,7 +99,3 @@ class Project(tap.endpoints.CRUDService):
       admin       = project.admin      ,
       member      = project.member     ,
     ))
-
-  @endpoints.method(message_types.VoidMessage, message.ProjectSend)
-  def delete(self, _request):
-    return message.ProjectSendCollection()

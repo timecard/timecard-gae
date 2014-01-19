@@ -53,10 +53,6 @@ class User(tap.endpoints.CRUDService):
                                       name=user.name,
                                       language=user.language))
 
-  @endpoints.method(message_types.VoidMessage, message.UserSend)
-  def read(self, _request):
-    return message.UserSendCollection()
-
   @endpoints.method(message.UserReceive, message.UserSend)
   @ndb.synctasklet
   def update(self, request):
@@ -75,7 +71,3 @@ class User(tap.endpoints.CRUDService):
     raise ndb.Return(message.UserSend(user_id=user.user_id,
                                       name=user.name,
                                       language=user.language))
-
-  @endpoints.method(message_types.VoidMessage, message.UserSend)
-  def delete(self, _request):
-    return message.UserSendCollection()
