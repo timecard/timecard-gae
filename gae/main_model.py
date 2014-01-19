@@ -36,9 +36,10 @@ class Project(ndb.Model):
     assert set(self.admin).issubset(set(self.member))
 
 class ArchivedComment(ndb.Model):
-  datetime = ndb.DateTimeProperty(indexed=False, required=True)
+  time_at = ndb.DateTimeProperty(indexed=False, required=True)
   author = ndb.StringProperty(indexed=False, required=True)
   body = ndb.TextProperty(indexed=False, required=True)
+  update_at = ndb.DateTimeProperty(indexed=False)
 
 class Issue(ndb.Model, model_mixin.Issue):
   #key

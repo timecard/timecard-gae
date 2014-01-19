@@ -46,11 +46,13 @@ class IssueReceiveNew(messages.Message):
   assignee      = messages.StringField       (4, required=False)
 
 class IssueReceive(messages.Message):
+  key           = messages.StringField       (1, required=True)
   subject       = messages.StringField       (2, required=True)
   description   = messages.StringField       (3, default="")
   assignee      = messages.StringField       (4, required=False)
-  closed_on     = message_types.DateTimeField(5, required=False)
-  key           = messages.StringField       (6, required=True)
+
+class IssueReceiveToggle(messages.Message):
+  key           = messages.StringField       (1, required=True)
 
 class IssueSend(messages.Message):
   project       = messages.IntegerField      (1, required=True)
