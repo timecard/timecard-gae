@@ -28,7 +28,7 @@ class User(tap.endpoints.CRUDService):
   def list(self, request):
     user_key_list = list()
     for user_receive_list in request.items:
-      user_key_list.append(ndb.Key(model.User, user_receive_list.user_id))
+      user_key_list.append(ndb.Key(model.User, user_receive_list.key))
     if user_key_list:
       entities = yield ndb.get_multi_async(user_key_list)
     else:
@@ -57,7 +57,7 @@ class User(tap.endpoints.CRUDService):
     future = user.put_async()
     if future.check_success():
       raise future.get_exception()
-    raise ndb.Return(message.UserSend(user_id=user.user_id,
+    raise ndb.Return(message.UserSend(key=user.user_id,
                                       name=user.name,
                                       language=user.language))
 
@@ -78,6 +78,6 @@ class User(tap.endpoints.CRUDService):
     future = user.put_async()
     if future.check_success():
       raise future.get_exception()
-    raise ndb.Return(message.UserSend(user_id=user.user_id,
+    raise ndb.Return(message.UserSend(key=user.user_id,
                                       name=user.name,
                                       language=user.language))

@@ -6,7 +6,7 @@ class UserReceive(messages.Message):
   language    = messages.StringField (2, required=True)
 
 class UserSend(messages.Message):
-  user_id     = messages.StringField (1, required=True)
+  key         = messages.StringField (1, required=True)
   name        = messages.StringField (2, required=True)
   language    = messages.StringField (3, required=True)
 
@@ -14,7 +14,7 @@ class UserSendCollection(messages.Message):
   items = messages.MessageField(UserSend, 1, repeated=True)
 
 class UserReceiveList(messages.Message):
-  user_id     = messages.StringField (1, required=True)
+  key         = messages.StringField (1, required=True)
 
 class UserReceiveListCollection(messages.Message):
   items = messages.MessageField(UserReceiveList, 1, repeated=True)
