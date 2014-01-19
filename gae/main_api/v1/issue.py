@@ -60,7 +60,7 @@ class Issue(tap.endpoints.CRUDService):
 
     issue_key = model.Issue.gen_key(
       project_key   = project_key,
-      will_start_at = datetime.now(),
+      will_start_at = datetime.utcnow(),
       author        = user,
     )
     issue = model.Issue(
@@ -141,7 +141,7 @@ class Issue(tap.endpoints.CRUDService):
     if user.key not in project.member:
       raise
 
-    issue.closed_on   = datetime.now()
+    issue.closed_on   = datetime.utcnow()
     _issue_key = yield issue.put_async()
 
     raise ndb.Return(message.IssueSend(

@@ -53,7 +53,7 @@ class Comment(tap.endpoints.CRUDService):
     if user.key not in project.member:
       raise
 
-    time_at = datetime.now()
+    time_at = datetime.utcnow()
     comment = model.Comment(
       key  = model.Comment.gen_key(issue_key, time_at, user_key, user.name),
       body = request.body,
@@ -95,7 +95,7 @@ class Comment(tap.endpoints.CRUDService):
       raise
 
     comment.body      = request.body
-    comment.update_at = datetime.now()
+    comment.update_at = datetime.utcnow()
     _comment_key = yield comment.put_async()
 
     raise ndb.Return(message.CommentSend(

@@ -71,7 +71,7 @@ class WorkLoad(tap.endpoints.CRUDService):
     activeworkload_key = model.ActiveWorkLoad.gen_key(
       project_key = project_key,
       issue_key   = issue_key,
-      start_at    = datetime.now(),
+      start_at    = datetime.utcnow(),
       user_key    = user.key,
       user_name   = user.name,
     )
@@ -137,7 +137,7 @@ class WorkLoad(tap.endpoints.CRUDService):
                                   issue_subject,
                                  ))
     start_at = None
-    end_at = datetime.now()
+    end_at = datetime.utcnow()
     workload_list = list()
     for activeworkload in sorted(activeworkload_list, key=operator.itemgetter(1), reverse=True):
       (activeworkload_key, start_at,
