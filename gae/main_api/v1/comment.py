@@ -46,7 +46,11 @@ class Comment(tap.endpoints.CRUDService):
     key_end   = ndb.Key(model.Comment, "{0}/\xff".format(comment_query_key))
     query = model.Comment.query(ndb.AND(model.Comment.key >= key_start,
                                         model.Comment.key <= key_end))
-    entities = yield query.fetch_async()
+    entities, cursor, more = yield tap.fetch_page_async(
+      query = query,
+      cursor_string = request.pagination,
+      page = 20,
+    )
 
     items = list()
     for comment in entities:
@@ -60,7 +64,10 @@ class Comment(tap.endpoints.CRUDService):
         author_name   = comment.author_name,
         update_at     = comment.update_at if hasattr(comment, "update_at") else None,
       ))
-    raise ndb.Return(message.CommentSendCollection(items=items))
+    raise ndb.Return(message.CommentSendCollection(
+      items = items,
+      pagination = cursor.urlsafe() if more else None,
+    ))
 
   @endpoints.method(message.CommentReceive, message.CommentSend)
   @ndb.synctasklet

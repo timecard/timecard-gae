@@ -120,6 +120,7 @@ class CommentReceive(messages.Message):
 class CommentReceiveList(messages.Message):
   project       = messages.IntegerField      (1, required=False)
   issue         = messages.StringField       (2, required=False)
+  pagination    = messages.StringField       (3, required=False)
 
 class CommentReceiveUpdate(messages.Message):
   body          = messages.StringField       (2, required=True)
@@ -136,4 +137,5 @@ class CommentSend(messages.Message):
   update_at     = message_types.DateTimeField(8, required=False)
 
 class CommentSendCollection(messages.Message):
-  items = messages.MessageField(CommentSend, 1, repeated=True)
+  items         = messages.MessageField(CommentSend, 1, repeated=True)
+  pagination    = messages.StringField       (2, required=False)
