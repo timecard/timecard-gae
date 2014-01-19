@@ -6,6 +6,7 @@ from protorpc import (
   message_types,
 )
 import endpoints
+import tap
 import tap.endpoints
 
 import main_model as model
@@ -16,24 +17,74 @@ from .api import api
 @api.api_class(resource_name="workload", path="workload")
 class WorkLoad(tap.endpoints.CRUDService):
 
-  @endpoints.method(message.WorkLoadReceive, message.WorkLoadSendCollection)
+  @endpoints.method(message.WorkLoadReceiveList, message.WorkLoadSendCollection)
   @ndb.synctasklet
   def list(self, request):
-    items = list()
-    if request.active:
-      query = model.ActiveWorkLoad.query()
+    project_key = ndb.Key(model.Project, request.project)
+    workload_query_key = project_key.integer_id()
+
+    session_user = self._get_user()
+    if session_user is None:
+      user = None
+      project = yield project_key.get_async()
     else:
-      query = model.WorkLoad.query()
-    entities = yield query.fetch_async()
-    for workload in entities:
+      user_key = ndb.Key(model.User, session_user.user_id())
+      user, project = yield ndb.get_multi_async((user_key, project_key))
+
+    if not project:
+      raise endpoints.NotFoundException()
+    if not project.is_public and (not user or user.key not in project.member):
+      raise endpoints.ForbiddenException()
+
+    key_start = ndb.Key(model.WorkLoad, workload_query_key)
+    key_end   = ndb.Key(model.WorkLoad, "{0}/\xff".format(workload_query_key))
+    query = model.WorkLoad.query(ndb.AND(model.WorkLoad.key >= key_start,
+                                         model.WorkLoad.key <= key_end))
+    workload_keys = yield tap.fetch_keys_only(query)
+    query = model.ActiveWorkLoad.query(model.ActiveWorkLoad.project == project_key)
+    activeworkload_keys = yield tap.fetch_keys_only(query)
+
+    items = list()
+    for activeworkload_key in activeworkload_keys:
+      (
+        project_key,
+        issue_key,
+        start_at,
+        user_key,
+        user_name,
+        project_name,
+        issue_subject,
+      ) = model.ActiveWorkLoad.parse_key(activeworkload_key)
       items.append(message.WorkLoadSend(
-        issue         = workload.issue_key.string_id(),
-        end_at        = workload.end_at if hasattr(workload, "end_at") else None,
-        user          = workload.user.string_id(),
-        project       = workload.project_key.integer_id(),
-        start_at      = workload.start_at,
-        project_name  = workload.project_name,
-        issue_subject = workload.issue_subject,
+        issue         = issue_key.string_id(),
+        end_at        = None,
+        user          = user_key.string_id(),
+        project       = project_key.integer_id(),
+        start_at      = start_at,
+        project_name  = project_name,
+        issue_subject = issue_subject,
+        user_name     = user_name,
+      ))
+    for workload_key in workload_keys:
+      (
+        project_key,
+        issue_key,
+        start_at,
+        end_at,
+        user_key,
+        user_name,
+        project_name,
+        issue_subject,
+      ) = model.WorkLoad.parse_key(workload_key)
+      items.append(message.WorkLoadSend(
+        issue         = issue_key.string_id(),
+        end_at        = end_at,
+        user          = user_key.string_id(),
+        project       = project_key.integer_id(),
+        start_at      = start_at,
+        project_name  = project_name,
+        issue_subject = issue_subject,
+        user_name     = user_name,
       ))
     raise ndb.Return(message.WorkLoadSendCollection(items=items))
 
@@ -76,7 +127,8 @@ class WorkLoad(tap.endpoints.CRUDService):
       user_name   = user.name,
     )
     activeworkload = model.ActiveWorkLoad(
-      key  = activeworkload_key ,
+      key     = activeworkload_key ,
+      project = project_key,
     )
     _activeworkload_key = yield activeworkload.put_async()
 
@@ -88,6 +140,7 @@ class WorkLoad(tap.endpoints.CRUDService):
       start_at      = activeworkload.start_at,
       project_name  = activeworkload.project_name,
       issue_subject = activeworkload.issue_subject,
+      user_name     = activeworkload.user_name,
     ))
 
   @endpoints.method(message.WorkLoadReceiveClose, message.WorkLoadSend)
@@ -165,4 +218,5 @@ class WorkLoad(tap.endpoints.CRUDService):
       start_at      = start_at,
       project_name  = project_name,
       issue_subject = issue_subject,
+      user_name     = user_name,
     ))

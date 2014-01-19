@@ -56,7 +56,7 @@ class Issue(ndb.Model, model_mixin.Issue):
   #closedしたらCommentを格納する
 
 class ActiveWorkLoad(ndb.Model, model_mixin.ActiveWorkLoad):
-  #ユーザーは同時に複数のWorkLoadを作れない
+  #ユーザーは同時に複数のActiveWorkLoadを作れない
   #key
   #user = ndb.KeyProperty(indexed=True, kind=User, required=True)
   ##project = ndb.KeyProperty(indexed=True, kind=Project, required=True)
@@ -64,7 +64,8 @@ class ActiveWorkLoad(ndb.Model, model_mixin.ActiveWorkLoad):
   #start_at = ndb.DateTimeProperty(indexed=False, auto_now_add=True)
   #project_name = ndb.StringProperty(indexed=False, required=True)
   #issue_subject = ndb.StringProperty(indexed=False, required=True)
-  pass
+
+  project = ndb.KeyProperty(indexed=True, kind=Project, required=True)
 
 class WorkLoad(ndb.Model, model_mixin.WorkLoad):
   #key

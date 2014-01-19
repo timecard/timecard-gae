@@ -83,6 +83,9 @@ class WorkLoadReceive(messages.Message):
 class WorkLoadReceiveNew(messages.Message):
   issue         = messages.StringField       (1, required=True)
 
+class WorkLoadReceiveList(messages.Message):
+  project       = messages.IntegerField      (1, required=True)
+
 class WorkLoadReceiveClose(messages.Message):
   pass
 
@@ -94,6 +97,7 @@ class WorkLoadSend(messages.Message):
   start_at      = message_types.DateTimeField(5, required=False)
   project_name  = messages.StringField       (6, required=True)
   issue_subject = messages.StringField       (7, required=True)
+  user_name     = messages.StringField       (8, required=True)
 
 class WorkLoadSendCollection(messages.Message):
   items = messages.MessageField(WorkLoadSend, 1, repeated=True)

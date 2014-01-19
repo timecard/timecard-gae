@@ -212,12 +212,25 @@ class ActiveWorkLoad(ModelMixinBase):
     ) = self.parsed_key
     return issue_subject
 
+  @property
+  def user_name(self):
+    (
+      _project_key,
+      _issue_key,
+      _start_at,
+      _user_key,
+      user_name,
+      _project_name,
+      _issue_subject,
+    ) = self.parsed_key
+    return user_name
+
 class WorkLoad(ModelMixinBase):
   @classmethod
   @ndb.synctasklet
   def gen_key(cls, project_key, issue_key, start_at, end_at):
     project, issue = yield ndb.get_multi_async((project_key, issue_key))
-    project_id, will_start_at, user_id, name = issue.key.string_id().split("/", 3)
+    project_id, will_start_at, user_id, user_name = issue.key.string_id().split("/", 3)
     start_at = str(int(time.mktime(start_at.timetuple())))
     end_at = str(int(time.mktime(end_at.timetuple())))
     project_name = project.name
@@ -228,7 +241,7 @@ class WorkLoad(ModelMixinBase):
       end_at,
       start_at,
       user_id,
-      name,
+      user_name,
       project_name,
       issue_subject,
     )
@@ -242,7 +255,7 @@ class WorkLoad(ModelMixinBase):
       end_at,
       start_at,
       user_id,
-      name,
+      user_name,
       project_name,
       issue_subject,
     ) = key.string_id().split("/", 7)
@@ -250,11 +263,11 @@ class WorkLoad(ModelMixinBase):
     project_key = ndb.Key("Project", int(project_id))
     result = (
       project_key,
-      Issue.gen_key(project_key, will_start_at, user_id, name), # issue_key
+      Issue.gen_key(project_key, will_start_at, user_id, user_name), # issue_key
       datetime.fromtimestamp(int(start_at)),  # start_at
       datetime.fromtimestamp(int(end_at)),  # end_at
       ndb.Key("User", user_id),
-      name,
+      user_name,
       project_name,
       issue_subject,
     )
