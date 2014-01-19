@@ -35,7 +35,7 @@ class User(tap.endpoints.CRUDService):
       entities = yield model.User.query().fetch_async()
     items = list()
     for user in entities:
-      items.append(message.UserSend(user_id=user.user_id,
+      items.append(message.UserSend(key=user.user_id,
                                     name=user.name,
                                     language=user.language))
     raise ndb.Return(message.UserSendCollection(items=items))
