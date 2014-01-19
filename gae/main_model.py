@@ -86,3 +86,4 @@ class Comment(ndb.Model, model_mixin.Comment):
   #author_name = ndb.StringProperty(indexed=False, required=True)
 
   body = ndb.TextProperty(indexed=False, required=True)
+  update_at = ndb.DateTimeProperty(indexed=False)

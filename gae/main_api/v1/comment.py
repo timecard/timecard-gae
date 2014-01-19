@@ -27,6 +27,7 @@ class Comment(tap.endpoints.CRUDService):
         time_at       = comment.time_at,
         author        = comment.author_key.string_id(),
         author_name   = comment.author_name,
+        update_at     = comment.update_at if hasattr(comment, "update_at") else None,
       ))
     raise ndb.Return(message.CommentSendCollection(items=items))
 
@@ -67,6 +68,7 @@ class Comment(tap.endpoints.CRUDService):
       time_at       = comment.time_at,
       author        = comment.author_key.string_id(),
       author_name   = comment.author_name,
+      update_at     = comment.update_at if hasattr(comment, "update_at") else None,
     ))
 
   @endpoints.method(message_types.VoidMessage, message.CommentSend)
@@ -89,8 +91,11 @@ class Comment(tap.endpoints.CRUDService):
       raise
     if not comment:
       raise
+    if user.key != comment.author_key:
+      raise
 
-    comment.body     = request.body
+    comment.body      = request.body
+    comment.update_at = datetime.now()
     _comment_key = yield comment.put_async()
 
     raise ndb.Return(message.CommentSend(
@@ -101,6 +106,7 @@ class Comment(tap.endpoints.CRUDService):
       time_at       = comment.time_at,
       author        = comment.author_key.string_id(),
       author_name   = comment.author_name,
+      update_at     = comment.update_at if hasattr(comment, "update_at") else None,
     ))
 
   @endpoints.method(message_types.VoidMessage, message.CommentSend)

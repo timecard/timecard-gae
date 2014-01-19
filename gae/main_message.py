@@ -104,6 +104,7 @@ class CommentSend(messages.Message):
   time_at       = message_types.DateTimeField(5, required=True)
   author        = messages.StringField       (6, required=True)
   author_name   = messages.StringField       (7, required=True)
+  update_at     = message_types.DateTimeField(8, required=False)
 
 class CommentSendCollection(messages.Message):
   items = messages.MessageField(CommentSend, 1, repeated=True)
