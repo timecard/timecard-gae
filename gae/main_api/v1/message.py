@@ -11,13 +11,15 @@ class UserSend(messages.Message):
   language    = messages.StringField (3, required=True)
 
 class UserSendCollection(messages.Message):
-  items = messages.MessageField(UserSend, 1, repeated=True)
+  items       = messages.MessageField(UserSend, 1, repeated=True)
+  pagination  = messages.StringField (2, required=False)
 
 class UserReceiveList(messages.Message):
   key         = messages.StringField (1, required=True)
 
 class UserReceiveListCollection(messages.Message):
-  items = messages.MessageField(UserReceiveList, 1, repeated=True)
+  items       = messages.MessageField(UserReceiveList, 1, repeated=True)
+  pagination  = messages.StringField (2, required=False)
 
 
 class ProjectReceiveNew(messages.Message):

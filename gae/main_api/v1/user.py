@@ -3,6 +3,7 @@ from protorpc import (
   message_types,
 )
 import endpoints
+import tap
 import tap.endpoints
 
 import main_model as model
@@ -30,15 +31,25 @@ class User(tap.endpoints.CRUDService):
     for user_receive_list in request.items:
       user_key_list.append(ndb.Key(model.User, user_receive_list.key))
     if user_key_list:
+      if request.pagination:
+        raise BadRequestException()
       entities = yield ndb.get_multi_async(user_key_list)
+      cursor = more = None
     else:
-      entities = yield model.User.query().fetch_async()
+      entities, cursor, more = yield tap.fetch_page_async(
+        query = model.User.query(),
+        cursor_string = request.pagination,
+        page = 20,
+      )
     items = list()
     for user in entities:
       items.append(message.UserSend(key=user.user_id,
                                     name=user.name,
                                     language=user.language))
-    raise ndb.Return(message.UserSendCollection(items=items))
+    raise ndb.Return(message.UserSendCollection(
+      items = items,
+      pagination = cursor.urlsafe() if more else None,
+    ))
 
   @endpoints.method(message.UserReceive, message.UserSend)
   @ndb.synctasklet
