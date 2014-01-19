@@ -27,6 +27,9 @@ class ProjectReceiveNew(messages.Message):
   description = messages.StringField (2, default="")
   is_public   = messages.BooleanField(3, default=True)
 
+class ProjectReceiveList(messages.Message):
+  pagination  = messages.StringField (1, required=False)
+
 class ProjectReceive(messages.Message):
   key         = messages.IntegerField(1, required=True)
   name        = messages.StringField (2, required=True)
@@ -44,7 +47,8 @@ class ProjectSend(messages.Message):
   member      = messages.StringField (8, repeated=True)
 
 class ProjectSendCollection(messages.Message):
-  items = messages.MessageField(ProjectSend, 1, repeated=True)
+  items       = messages.MessageField(ProjectSend, 1, repeated=True)
+  pagination  = messages.StringField (2, required=False)
 
 
 class IssueReceiveNew(messages.Message):

@@ -3,6 +3,7 @@ from protorpc import (
   message_types,
 )
 import endpoints
+import tap
 import tap.endpoints
 
 import main_model as model
@@ -13,9 +14,9 @@ from .api import api
 @api.api_class(resource_name="project", path="project")
 class Project(tap.endpoints.CRUDService):
 
-  @endpoints.method(message_types.VoidMessage, message.ProjectSendCollection)
+  @endpoints.method(message.ProjectReceiveList, message.ProjectSendCollection)
   @ndb.synctasklet
-  def list(self, _request):
+  def list(self, request):
     session_user = self._get_user()
     if session_user is None:
       user = None
@@ -26,10 +27,16 @@ class Project(tap.endpoints.CRUDService):
     if user:
       query = model.Project.query(ndb.OR(model.Project.is_public == True,
                                          model.Project.member == user_key))
+      query = query.order(model.Project.key)
     else:
       query = model.Project.query(model.Project.is_public == True)
+    entities, cursor, more = yield tap.fetch_page_async(
+      query = query,
+      cursor_string = request.pagination,
+      page = 20,
+    )
+
     items = list()
-    entities = yield query.fetch_async()
     for project in entities:
       items.append(message.ProjectSend(
         key         = project.key.integer_id(),
@@ -41,7 +48,10 @@ class Project(tap.endpoints.CRUDService):
         admin       = [key.string_id() for key in project.admin],
         member      = [key.string_id() for key in project.member],
       ))
-    raise ndb.Return(message.ProjectSendCollection(items=items))
+    raise ndb.Return(message.ProjectSendCollection(
+      items = items,
+      pagination = cursor.urlsafe() if more else None,
+    ))
 
   @endpoints.method(message.ProjectReceiveNew, message.ProjectSend)
   @ndb.synctasklet
