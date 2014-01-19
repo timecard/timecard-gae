@@ -26,15 +26,6 @@ class User(tap.endpoints.CRUDService):
   @endpoints.method(message.UserReceiveListCollection, message.UserSendCollection)
   @ndb.synctasklet
   def list(self, request):
-    session_user = self._get_user()
-    if session_user is None:
-      raise endpoints.UnauthorizedException()
-
-    key = ndb.Key(model.User, session_user.user_id())
-    user = yield key.get_async()
-    if user is not None:
-      raise endpoints.UnauthorizedException()
-
     user_key_list = list()
     for user_receive_list in request.items:
       user_key_list.append(ndb.Key(model.User, user_receive_list.user_id))
@@ -56,10 +47,10 @@ class User(tap.endpoints.CRUDService):
     if session_user is None:
       raise endpoints.UnauthorizedException()
 
-    key = ndb.Key(model.User, session_user.user_id())
-    user = yield key.get_async()
+    user_key = ndb.Key(model.User, session_user.user_id())
+    user = yield user_key.get_async()
     if user is not None:
-      raise endpoints.UnauthorizedException()
+      raise endpoints.ForbiddenException()
 
     user.name = request.name
     user.language = request.language
@@ -77,10 +68,10 @@ class User(tap.endpoints.CRUDService):
     if session_user is None:
       raise endpoints.UnauthorizedException()
 
-    key = ndb.Key(model.User, session_user.user_id())
-    user = yield key.get_async()
+    user_key = ndb.Key(model.User, session_user.user_id())
+    user = yield user_key.get_async()
     if user is None:
-      raise endpoints.UnauthorizedException()
+      raise endpoints.BadRequestException()
 
     user.name = request.name
     user.language = request.language
