@@ -34,7 +34,7 @@ class Comment(tap.endpoints.CRUDService):
   @endpoints.method(message.CommentReceive, message.CommentSend)
   @ndb.synctasklet
   def create(self, request):
-    session_user = tap.endpoints.get_user_from_endpoints_service(self)
+    session_user = self._get_user()
     if session_user is None:
       raise
 
@@ -78,7 +78,7 @@ class Comment(tap.endpoints.CRUDService):
   @endpoints.method(message.CommentReceiveUpdate, message.CommentSend)
   @ndb.synctasklet
   def update(self, request):
-    session_user = tap.endpoints.get_user_from_endpoints_service(self)
+    session_user = self._get_user()
     if session_user is None:
       raise
 

@@ -34,7 +34,7 @@ class Project(tap.endpoints.CRUDService):
   @endpoints.method(message.ProjectReceiveNew, message.ProjectSend)
   @ndb.synctasklet
   def create(self, request):
-    session_user = tap.endpoints.get_user_from_endpoints_service(self)
+    session_user = self._get_user()
     if session_user is None:
       raise
     key = ndb.Key(model.User, session_user.user_id())
@@ -69,7 +69,7 @@ class Project(tap.endpoints.CRUDService):
   @endpoints.method(message.ProjectReceive, message.ProjectSend)
   @ndb.synctasklet
   def update(self, request):
-    session_user = tap.endpoints.get_user_from_endpoints_service(self)
+    session_user = self._get_user()
     if session_user is None:
       raise
 

@@ -36,7 +36,7 @@ class Issue(tap.endpoints.CRUDService):
   @endpoints.method(message.IssueReceiveNew, message.IssueSend)
   @ndb.synctasklet
   def create(self, request):
-    session_user = tap.endpoints.get_user_from_endpoints_service(self)
+    session_user = self._get_user()
     if session_user is None:
       raise
 
@@ -89,7 +89,7 @@ class Issue(tap.endpoints.CRUDService):
   @endpoints.method(message.IssueReceive, message.IssueSend)
   @ndb.synctasklet
   def update(self, request):
-    session_user = tap.endpoints.get_user_from_endpoints_service(self)
+    session_user = self._get_user()
     if session_user is None:
       raise
 
@@ -125,7 +125,7 @@ class Issue(tap.endpoints.CRUDService):
   @endpoints.method(message.IssueReceiveToggle, message.IssueSend)
   @ndb.synctasklet
   def close(self, request):
-    session_user = tap.endpoints.get_user_from_endpoints_service(self)
+    session_user = self._get_user()
     if session_user is None:
       raise
 
@@ -158,7 +158,7 @@ class Issue(tap.endpoints.CRUDService):
   @endpoints.method(message.IssueReceiveToggle, message.IssueSend)
   @ndb.synctasklet
   def reopen(self, request):
-    session_user = tap.endpoints.get_user_from_endpoints_service(self)
+    session_user = self._get_user()
     if session_user is None:
       raise
 
