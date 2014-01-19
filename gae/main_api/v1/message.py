@@ -59,6 +59,7 @@ class IssueReceiveNew(messages.Message):
 
 class IssueReceiveList(messages.Message):
   project       = messages.IntegerField      (1, required=True)
+  pagination    = messages.StringField       (2, required=False)
 
 class IssueReceive(messages.Message):
   key           = messages.StringField       (1, required=True)
@@ -80,7 +81,8 @@ class IssueSend(messages.Message):
   author        = messages.IntegerField      (8, required=True)
 
 class IssueSendCollection(messages.Message):
-  items = messages.MessageField(IssueSend, 1, repeated=True)
+  items         = messages.MessageField(IssueSend, 1, repeated=True)
+  pagination    = messages.StringField       (2, required=False)
 
 
 class WorkLoadReceive(messages.Message):

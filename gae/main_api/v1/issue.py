@@ -37,7 +37,11 @@ class Issue(tap.endpoints.CRUDService):
     key_end   = ndb.Key(model.Issue, "{0}/\xff".format(project_id))
     query = model.Issue.query(ndb.AND(model.Issue.key >= key_start,
                                       model.Issue.key <= key_end))
-    entities = yield query.fetch_async()
+    entities, cursor, more = yield tap.fetch_page_async(
+      query = query,
+      cursor_string = request.pagination,
+      page = 20,
+    )
 
     items = list()
     for issue in entities:
@@ -51,7 +55,10 @@ class Issue(tap.endpoints.CRUDService):
         will_start_at = issue.will_start_at,
         author        = issue.author_key.integer_id()       ,
       ))
-    raise ndb.Return(message.IssueSendCollection(items=items))
+    raise ndb.Return(message.IssueSendCollection(
+      items = items,
+      pagination = cursor.urlsafe() if more else None,
+    ))
 
   @endpoints.method(message.IssueReceiveNew, message.IssueSend)
   @ndb.synctasklet
