@@ -36,7 +36,7 @@ class Comment(tap.endpoints.CRUDService):
   def create(self, request):
     session_user = self._get_user()
     if session_user is None:
-      raise
+      raise endpoints.UnauthorizedException()
 
     user_id = session_user.user_id()
     user_key = ndb.Key(model.User, user_id)
@@ -45,13 +45,13 @@ class Comment(tap.endpoints.CRUDService):
     user, issue, project = yield ndb.get_multi_async((user_key, issue_key, project_key))
 
     if not user:
-      raise
+      raise endpoints.UnauthorizedException()
     if not issue:
-      raise
+      raise endpoints.BadRequestException()
     if not project:
-      raise
+      raise endpoints.BadRequestException()
     if user.key not in project.member:
-      raise
+      raise endpoints.ForbiddenException()
 
     time_at = datetime.utcnow()
     comment = model.Comment(
@@ -76,7 +76,7 @@ class Comment(tap.endpoints.CRUDService):
   def update(self, request):
     session_user = self._get_user()
     if session_user is None:
-      raise
+      raise endpoints.UnauthorizedException()
 
     user_id = session_user.user_id()
     user_key = ndb.Key(model.User, user_id)
@@ -84,11 +84,11 @@ class Comment(tap.endpoints.CRUDService):
     user, comment = yield ndb.get_multi_async((user_key, comment_key))
 
     if not user:
-      raise
+      raise endpoints.UnauthorizedException()
     if not comment:
-      raise
+      raise endpoints.NotFoundException()
     if user.key != comment.author_key:
-      raise
+      raise endpoints.ForbiddenException()
 
     comment.body      = request.body
     comment.update_at = datetime.utcnow()

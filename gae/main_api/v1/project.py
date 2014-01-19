@@ -36,11 +36,11 @@ class Project(tap.endpoints.CRUDService):
   def create(self, request):
     session_user = self._get_user()
     if session_user is None:
-      raise
+      raise endpoints.UnauthorizedException()
     key = ndb.Key(model.User, session_user.user_id())
     user = yield key.get_async()
     if user is None:
-      raise
+      raise endpoints.UnauthorizedException()
 
     project = model.Project(
       name        = request.name       ,
@@ -67,18 +67,18 @@ class Project(tap.endpoints.CRUDService):
   def update(self, request):
     session_user = self._get_user()
     if session_user is None:
-      raise
+      raise endpoints.UnauthorizedException()
 
     user_key = ndb.Key(model.User, session_user.user_id())
     project_key = ndb.Key(model.Project, request.key)
     user, project = yield ndb.get_multi_async((user_key, project_key))
 
     if not user:
-      raise
+      raise endpoints.UnauthorizedException()
     if not project:
-      raise
+      raise endpoints.NotFoundException()
     if not user.key in project.admin:
-      raise
+      raise endpoints.ForbiddenException()
 
     project.name        = request.name
     project.description = request.description

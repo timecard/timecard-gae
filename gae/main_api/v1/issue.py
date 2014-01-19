@@ -38,7 +38,7 @@ class Issue(tap.endpoints.CRUDService):
   def create(self, request):
     session_user = self._get_user()
     if session_user is None:
-      raise
+      raise endpoints.UnauthorizedException()
 
     user_key = ndb.Key(model.User, session_user.user_id())
     project_key = ndb.Key(model.Project, int(request.project))
@@ -50,13 +50,13 @@ class Issue(tap.endpoints.CRUDService):
       user, project = yield ndb.get_multi_async((user_key, project_key))
 
     if not user:
-      raise
+      raise endpoints.UnauthorizedException()
     if not project:
-      raise
+      raise endpoints.BadRequestException()
     if not user.key in project.member:
-      raise
+      raise endpoints.ForbiddenException()
     if assignee_key is not None and not assignee:
-      raise
+      raise endpoints.BadRequestException()
 
     issue_key = model.Issue.gen_key(
       project_key   = project_key,
@@ -87,7 +87,7 @@ class Issue(tap.endpoints.CRUDService):
   def update(self, request):
     session_user = self._get_user()
     if session_user is None:
-      raise
+      raise endpoints.UnauthorizedException()
 
     user_key = ndb.Key(model.User, session_user.user_id())
     issue_key = ndb.Key(model.Issue, request.key)
@@ -95,11 +95,11 @@ class Issue(tap.endpoints.CRUDService):
     user, issue, project = yield ndb.get_multi_async((user_key, issue_key, project_key))
 
     if not user:
-      raise
+      raise endpoints.UnauthorizedException()
     if not issue:
-      raise
+      raise endpoints.NotFoundException()
     if user.key not in project.member:
-      raise
+      raise endpoints.ForbiddenException()
 
     issue.subject     = request.subject
     issue.description = request.description
@@ -123,7 +123,7 @@ class Issue(tap.endpoints.CRUDService):
   def close(self, request):
     session_user = self._get_user()
     if session_user is None:
-      raise
+      raise endpoints.UnauthorizedException()
 
     user_key = ndb.Key(model.User, session_user.user_id())
     issue_key = ndb.Key(model.Issue, request.key)
@@ -131,11 +131,11 @@ class Issue(tap.endpoints.CRUDService):
     user, issue, project = yield ndb.get_multi_async((user_key, issue_key, project_key))
 
     if not user:
-      raise
+      raise endpoints.UnauthorizedException()
     if not issue:
-      raise
+      raise endpoints.NotFoundException()
     if user.key not in project.member:
-      raise
+      raise endpoints.ForbiddenException()
 
     issue.closed_on   = datetime.utcnow()
     _issue_key = yield issue.put_async()
@@ -156,7 +156,7 @@ class Issue(tap.endpoints.CRUDService):
   def reopen(self, request):
     session_user = self._get_user()
     if session_user is None:
-      raise
+      raise endpoints.UnauthorizedException()
 
     user_key = ndb.Key(model.User, session_user.user_id())
     issue_key = ndb.Key(model.Issue, request.key)
@@ -164,11 +164,11 @@ class Issue(tap.endpoints.CRUDService):
     user, issue, project = yield ndb.get_multi_async((user_key, issue_key, project_key))
 
     if not user:
-      raise
+      raise endpoints.UnauthorizedException()
     if not issue:
-      raise
+      raise endpoints.NotFoundException()
     if user.key not in project.member:
-      raise
+      raise endpoints.ForbiddenException()
 
     issue.closed_on   = None
     _issue_key = yield issue.put_async()

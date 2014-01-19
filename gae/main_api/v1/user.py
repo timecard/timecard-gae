@@ -39,11 +39,11 @@ class User(tap.endpoints.CRUDService):
   def create(self, request):
     session_user = self._get_user()
     if session_user is None:
-      raise
+      raise endpoints.UnauthorizedException()
     key = ndb.Key(model.User, session_user.user_id())
     user = yield key.get_async()
     if user is not None:
-      raise
+      raise endpoints.UnauthorizedException()
     user.name = request.name
     user.language = request.language
     future = user.put_async()
@@ -58,11 +58,11 @@ class User(tap.endpoints.CRUDService):
   def update(self, request):
     session_user = self._get_user()
     if session_user is None:
-      raise
+      raise endpoints.UnauthorizedException()
     key = ndb.Key(model.User, session_user.user_id())
     user = yield key.get_async()
     if user is None:
-      raise
+      raise endpoints.UnauthorizedException()
     user.name = request.name
     user.language = request.language
     future = user.put_async()

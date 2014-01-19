@@ -42,7 +42,7 @@ class WorkLoad(tap.endpoints.CRUDService):
   def create(self, request):
     session_user = self._get_user()
     if session_user is None:
-      raise
+      raise endpoints.UnauthorizedException()
 
     user_id = session_user.user_id()
     user_key = ndb.Key(model.User, user_id)
@@ -51,13 +51,13 @@ class WorkLoad(tap.endpoints.CRUDService):
     user, issue, project = yield ndb.get_multi_async((user_key, issue_key, project_key))
 
     if not user:
-      raise
+      raise endpoints.UnauthorizedException()
     if not issue:
-      raise
+      raise endpoints.BadRequestException()
     if not project:
-      raise
+      raise endpoints.BadRequestException()
     if user.key not in project.member:
-      raise
+      raise endpoints.ForbiddenException()
 
     key_start = ndb.Key(model.ActiveWorkLoad, user_id)
     key_end   = ndb.Key(model.ActiveWorkLoad, "{0}/\xff".format(user_id))
@@ -66,7 +66,7 @@ class WorkLoad(tap.endpoints.CRUDService):
     activeworkload = yield query.get_async()
 
     if activeworkload:
-      raise
+      raise endpoints.ForbiddenException()
 
     activeworkload_key = model.ActiveWorkLoad.gen_key(
       project_key = project_key,
@@ -95,14 +95,14 @@ class WorkLoad(tap.endpoints.CRUDService):
   def update(self, _request):
     session_user = self._get_user()
     if session_user is None:
-      raise
+      raise endpoints.UnauthorizedException()
 
     user_id = session_user.user_id()
     user_key = ndb.Key(model.User, user_id)
     user = yield user_key.get_async()
 
     if not user:
-      raise
+      raise endpoints.UnauthorizedException()
 
     key_start = ndb.Key(model.ActiveWorkLoad, user_id)
     key_end   = ndb.Key(model.ActiveWorkLoad, "{0}/\xff".format(user_id))
@@ -111,7 +111,7 @@ class WorkLoad(tap.endpoints.CRUDService):
     activeworkload_key_list = yield query.fetch_async(keys_only=True)
 
     if not activeworkload_key_list:
-      raise
+      raise endpoints.ForbiddenException()
 
     activeworkload_list = list()
     for activeworkload_key in activeworkload_key_list:
