@@ -15,11 +15,31 @@ from .api import api
 @api.api_class(resource_name="issue", path="issue")
 class Issue(tap.endpoints.CRUDService):
 
-  @endpoints.method(message_types.VoidMessage, message.IssueSendCollection)
+  @endpoints.method(message.IssueReceiveList, message.IssueSendCollection)
   @ndb.synctasklet
-  def list(self, _request):
+  def list(self, request):
+    project_key = ndb.Key(model.Project, request.project)
+    session_user = self._get_user()
+    if session_user is None:
+      user = None
+      project = yield project_key.get_async()
+    else:
+      user_key = ndb.Key(model.User, session_user.user_id())
+      user, project = yield ndb.get_multi_async((user_key, project_key))
+
+    if not project:
+      raise endpoints.NotFoundException()
+    if not project.is_public and (not user or user.key not in project.member):
+      raise endpoints.ForbiddenException()
+
+    project_id = project.key.integer_id()
+    key_start = ndb.Key(model.Issue, project_id)
+    key_end   = ndb.Key(model.Issue, "{0}/\xff".format(project_id))
+    query = model.Issue.query(ndb.AND(model.Issue.key >= key_start,
+                                      model.Issue.key <= key_end))
+    entities = yield query.fetch_async()
+
     items = list()
-    entities = yield model.Issue.query().fetch_async()
     for issue in entities:
       items.append(message.IssueSend(
         project       = issue.project_key.integer_id()      ,

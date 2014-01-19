@@ -51,6 +51,9 @@ class IssueReceiveNew(messages.Message):
   description   = messages.StringField       (3, default="")
   assignee      = messages.StringField       (4, required=False)
 
+class IssueReceiveList(messages.Message):
+  project       = messages.IntegerField      (1, required=True)
+
 class IssueReceive(messages.Message):
   key           = messages.StringField       (1, required=True)
   subject       = messages.StringField       (2, required=True)
