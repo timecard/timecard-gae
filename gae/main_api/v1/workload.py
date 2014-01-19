@@ -9,8 +9,8 @@ import endpoints
 import tap.endpoints
 
 import main_model as model
-import main_message as message
 
+from . import message
 from .api import api
 
 @api.api_class(resource_name="workload", path="workload")
