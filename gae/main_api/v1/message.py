@@ -104,7 +104,8 @@ class CommentReceive(messages.Message):
   body          = messages.StringField       (2, required=True)
 
 class CommentReceiveList(messages.Message):
-  project       = messages.IntegerField      (1, required=True)
+  project       = messages.IntegerField      (1, required=False)
+  issue         = messages.StringField       (2, required=False)
 
 class CommentReceiveUpdate(messages.Message):
   body          = messages.StringField       (2, required=True)

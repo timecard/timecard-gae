@@ -16,7 +16,19 @@ class Comment(tap.endpoints.CRUDService):
   @endpoints.method(message.CommentReceiveList, message.CommentSendCollection)
   @ndb.synctasklet
   def list(self, request):
-    project_key = ndb.Key(model.Project, request.project)
+    if request.issue:
+      if request.project:
+        raise endpoints.BadRequestException()
+      issue_key = ndb.Key(model.Issue, request.issue)
+      project_key, _will_start_at, _user_id, _name = model.Issue.parse_key(issue_key)
+      comment_query_key = issue_key.string_id()
+    elif request.project:
+      issue_key = None
+      project_key = ndb.Key(model.Project, request.project)
+      comment_query_key = project_key.integer_id()
+    else:
+      raise endpoints.BadRequestException()
+
     session_user = self._get_user()
     if session_user is None:
       user = None
@@ -25,15 +37,17 @@ class Comment(tap.endpoints.CRUDService):
       user_key = ndb.Key(model.User, session_user.user_id())
       user, project = yield ndb.get_multi_async((user_key, project_key))
 
-    if project.is_public or user and user.key in project.member:
-      project_id = project.key.integer_id()
-      key_start = ndb.Key(model.Comment, project_id)
-      key_end   = ndb.Key(model.Comment, "{0}/\xff".format(project_id))
-      query = model.Comment.query(ndb.AND(model.Comment.key >= key_start,
-                                          model.Comment.key <= key_end))
-      entities = yield query.fetch_async()
-    else:
-      entities = list()
+    if not project:
+      raise endpoints.NotFoundException()
+    if not project.is_public and (not user or user.key not in project.member):
+      raise endpoints.ForbiddenException()
+
+    key_start = ndb.Key(model.Comment, comment_query_key)
+    key_end   = ndb.Key(model.Comment, "{0}/\xff".format(comment_query_key))
+    query = model.Comment.query(ndb.AND(model.Comment.key >= key_start,
+                                        model.Comment.key <= key_end))
+    entities = yield query.fetch_async()
+
     items = list()
     for comment in entities:
       items.append(message.CommentSend(
