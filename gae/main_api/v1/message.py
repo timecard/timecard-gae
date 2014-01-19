@@ -93,6 +93,7 @@ class WorkLoadReceiveNew(messages.Message):
 
 class WorkLoadReceiveList(messages.Message):
   project       = messages.IntegerField      (1, required=True)
+  pagination    = messages.StringField       (2, required=False)
 
 class WorkLoadReceiveClose(messages.Message):
   pass
@@ -108,7 +109,8 @@ class WorkLoadSend(messages.Message):
   user_name     = messages.StringField       (8, required=True)
 
 class WorkLoadSendCollection(messages.Message):
-  items = messages.MessageField(WorkLoadSend, 1, repeated=True)
+  items         = messages.MessageField(WorkLoadSend, 1, repeated=True)
+  pagination    = messages.StringField       (2, required=False)
 
 
 class CommentReceive(messages.Message):

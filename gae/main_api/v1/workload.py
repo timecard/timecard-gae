@@ -40,9 +40,17 @@ class WorkLoad(tap.endpoints.CRUDService):
     key_end   = ndb.Key(model.WorkLoad, "{0}/\xff".format(workload_query_key))
     query = model.WorkLoad.query(ndb.AND(model.WorkLoad.key >= key_start,
                                          model.WorkLoad.key <= key_end))
-    workload_keys = yield tap.fetch_keys_only(query)
-    query = model.ActiveWorkLoad.query(model.ActiveWorkLoad.project == project_key)
-    activeworkload_keys = yield tap.fetch_keys_only(query)
+    workload_keys, cursor, more = yield tap.fetch_page_async(
+      query = query,
+      cursor_string = request.pagination,
+      page = 20,
+      keys_only = True,
+    )
+    if request.pagination is None:
+      query = model.ActiveWorkLoad.query(model.ActiveWorkLoad.project == project_key)
+      activeworkload_keys = yield tap.fetch_keys_only(query)
+    else:
+      activeworkload_keys = list()
 
     items = list()
     for activeworkload_key in activeworkload_keys:
@@ -86,7 +94,10 @@ class WorkLoad(tap.endpoints.CRUDService):
         issue_subject = issue_subject,
         user_name     = user_name,
       ))
-    raise ndb.Return(message.WorkLoadSendCollection(items=items))
+    raise ndb.Return(message.WorkLoadSendCollection(
+      items = items,
+      pagination = cursor.urlsafe() if more else None,
+    ))
 
   @endpoints.method(message.WorkLoadReceiveNew, message.WorkLoadSend)
   @ndb.synctasklet
