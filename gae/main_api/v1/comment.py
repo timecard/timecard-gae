@@ -13,11 +13,28 @@ from .api import api
 @api.api_class(resource_name="comment", path="comment")
 class Comment(tap.endpoints.CRUDService):
 
-  @endpoints.method(message_types.VoidMessage, message.CommentSendCollection)
+  @endpoints.method(message.CommentReceiveList, message.CommentSendCollection)
   @ndb.synctasklet
-  def list(self, _request):
+  def list(self, request):
+    project_key = ndb.Key(model.Project, request.project)
+    session_user = self._get_user()
+    if session_user is None:
+      user = None
+      project = yield project_key.get_async()
+    else:
+      user_key = ndb.Key(model.User, session_user.user_id())
+      user, project = yield ndb.get_multi_async((user_key, project_key))
+
+    if project.is_public or user and user.key in project.member:
+      project_id = project.key.integer_id()
+      key_start = ndb.Key(model.Comment, project_id)
+      key_end   = ndb.Key(model.Comment, "{0}/\xff".format(project_id))
+      query = model.Comment.query(ndb.AND(model.Comment.key >= key_start,
+                                          model.Comment.key <= key_end))
+      entities = yield query.fetch_async()
+    else:
+      entities = list()
     items = list()
-    entities = yield model.Comment.query().fetch_async()
     for comment in entities:
       items.append(message.CommentSend(
         issue         = comment.issue_key.string_id(),
