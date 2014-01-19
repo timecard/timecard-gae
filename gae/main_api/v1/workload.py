@@ -203,7 +203,7 @@ class WorkLoad(tap.endpoints.CRUDService):
     key_end   = ndb.Key(model.ActiveWorkLoad, "{0}/\xff".format(user_id))
     query = model.ActiveWorkLoad.query(ndb.AND(model.ActiveWorkLoad.key >= key_start,
                                                model.ActiveWorkLoad.key <= key_end))
-    activeworkload_key_list = yield query.fetch_async(keys_only=True)
+    activeworkload_key_list = yield tap.fetch_keys_only(query)
 
     if not activeworkload_key_list:
       raise endpoints.ForbiddenException()
