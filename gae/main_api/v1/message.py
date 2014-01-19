@@ -13,6 +13,12 @@ class UserSend(messages.Message):
 class UserSendCollection(messages.Message):
   items = messages.MessageField(UserSend, 1, repeated=True)
 
+class UserReceiveList(messages.Message):
+  user_id     = messages.StringField (1, required=True)
+
+class UserReceiveListCollection(messages.Message):
+  items = messages.MessageField(UserReceiveList, 1, repeated=True)
+
 
 class ProjectReceiveNew(messages.Message):
   name        = messages.StringField (1, required=True)
