@@ -187,7 +187,7 @@ class WorkLoad(tap.endpoints.CRUDService):
 
   @endpoints.method(message.WorkLoadReceiveClose, message.WorkLoadSend)
   @ndb.synctasklet
-  def update(self, _request):
+  def finish(self, _request):
     session_user = self._get_user()
     if session_user is None:
       raise endpoints.UnauthorizedException()
