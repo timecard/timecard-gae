@@ -9,6 +9,7 @@ from js.bootstrap import bootstrap
 import webapp2
 
 from main_api.v1 import api
+from main_api.v1 import user as api_user
 import main_model as model
 
 class BaseHandler(tap.RequestHandler):
@@ -66,7 +67,7 @@ class Settings(BaseHandler):
       if language is not None:
         user.language = language
       user.set_to_session(self.session)
-      future = api.user_store(user)
+      future = api_user.user_store(user)
       if future.check_success():
         logging.error(future.get_exception())
         self.abort(500)

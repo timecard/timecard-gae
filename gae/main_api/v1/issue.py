@@ -88,7 +88,8 @@ class Issue(tap.endpoints.CRUDService):
     issue_key = model.Issue.gen_key(
       project_key   = project_key,
       will_start_at = datetime.utcnow(),
-      author        = user,
+      author_id     = user.key.string_id(),
+      author_name   = user.name,
     )
     issue = model.Issue(
       key           = issue_key          ,
