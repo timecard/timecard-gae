@@ -1,16 +1,20 @@
 from datetime import datetime
+import string
 
 from google.appengine.ext import ndb
 from protorpc import (
   message_types,
 )
 import endpoints
+import tap
 import tap.endpoints
 
 import main_model as model
 
 from . import message
 from .api import api
+
+base62_encode = tap.base_encoder(string.digits + string.letters)
 
 @api.api_class(resource_name="issue", path="issue")
 class Issue(tap.endpoints.CRUDService):
@@ -32,7 +36,7 @@ class Issue(tap.endpoints.CRUDService):
     if not project.is_public and (not user or user.key not in project.member):
       raise endpoints.ForbiddenException()
 
-    project_id = project.key.integer_id()
+    project_id = base62_encode(project.key.integer_id())
     key_start = ndb.Key(model.Issue, project_id)
     key_end   = ndb.Key(model.Issue, "{0}/\xff".format(project_id))
     query = model.Issue.query(ndb.AND(model.Issue.key >= key_start,

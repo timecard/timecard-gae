@@ -1,14 +1,18 @@
 from datetime import datetime
+import string
 
 from google.appengine.ext import ndb
 from protorpc import message_types
 import endpoints
+import tap
 import tap.endpoints
 
 import main_model as model
 
 from . import message
 from .api import api
+
+base62_encode = tap.base_encoder(string.digits + string.letters)
 
 @api.api_class(resource_name="comment", path="comment")
 class Comment(tap.endpoints.CRUDService):
@@ -25,7 +29,7 @@ class Comment(tap.endpoints.CRUDService):
     elif request.project:
       issue_key = None
       project_key = ndb.Key(model.Project, request.project)
-      comment_query_key = project_key.integer_id()
+      comment_query_key = base62_encode(project_key.integer_id())
     else:
       raise endpoints.BadRequestException()
 

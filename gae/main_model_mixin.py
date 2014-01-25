@@ -1,10 +1,16 @@
 #-* coding: utf-8 -*-
 
 from datetime import datetime
+import string
 import time
 
 from google.appengine.ext import ndb
+import tap
 import webapp2
+
+base62_chars = string.digits + string.letters
+base62_decode = tap.base_decoder(base62_chars)
+base62_encode = tap.base_encoder(base62_chars)
 
 class ModelMixinBase(object):
   @webapp2.cached_property
@@ -31,9 +37,9 @@ class Issue(ModelMixinBase):
   @classmethod
   def gen_key(cls, project_key, will_start_at, author_id, author_name):
     if not isinstance(will_start_at, str):
-      will_start_at = str(int(time.mktime(will_start_at.timetuple())))
+      will_start_at = base62_encode(int(time.mktime(will_start_at.timetuple())))
     argv = (
-      str(project_key.integer_id()),
+      base62_encode(project_key.integer_id()),
       will_start_at,
       author_id,
       author_name,
@@ -44,8 +50,8 @@ class Issue(ModelMixinBase):
   def parse_key(cls, key):
     project_id, will_start_at, user_id, name = key.string_id().split("/", 3)
     result = (
-      ndb.Key("Project", int(project_id)),
-      datetime.fromtimestamp(int(will_start_at)),
+      ndb.Key("Project", base62_decode(project_id)),
+      datetime.fromtimestamp(base62_decode(will_start_at)),
       user_id,
       name,
     )
@@ -78,7 +84,7 @@ class ActiveWorkLoad(ModelMixinBase):
   def gen_key(cls, project_key, issue_key, start_at, user_key, user_name):
     project, issue = yield ndb.get_multi_async((project_key, issue_key))
     project_id, will_start_at, author_id, author_name = issue.key.string_id().split("/", 3)
-    start_at = str(int(time.mktime(start_at.timetuple())))
+    start_at = base62_encode(int(time.mktime(start_at.timetuple())))
     project_name = project.name
     issue_subject = issue.subject
     user_id = user_key.string_id()
@@ -109,11 +115,11 @@ class ActiveWorkLoad(ModelMixinBase):
       user_name,
     ) = key.string_id().split("/", 8)
 
-    project_key = ndb.Key("Project", int(project_id))
+    project_key = ndb.Key("Project", base62_decode(project_id))
     result = (
       project_key,
       Issue.gen_key(project_key, will_start_at, author_id, author_name), # issue_key
-      datetime.fromtimestamp(int(start_at)),  # start_at
+      datetime.fromtimestamp(base62_decode(start_at)),  # start_at
       ndb.Key("User", user_id), # user_key
       user_name,
       project_name,
@@ -231,8 +237,8 @@ class WorkLoad(ModelMixinBase):
   def gen_key(cls, project_key, issue_key, start_at, end_at):
     project, issue = yield ndb.get_multi_async((project_key, issue_key))
     project_id, will_start_at, user_id, user_name = issue.key.string_id().split("/", 3)
-    start_at = str(int(time.mktime(start_at.timetuple())))
-    end_at = str(int(time.mktime(end_at.timetuple())))
+    start_at = base62_encode(int(time.mktime(start_at.timetuple())))
+    end_at = base62_encode(int(time.mktime(end_at.timetuple())))
     project_name = project.name
     issue_subject = issue.subject
     argv = (
@@ -260,12 +266,12 @@ class WorkLoad(ModelMixinBase):
       issue_subject,
     ) = key.string_id().split("/", 7)
 
-    project_key = ndb.Key("Project", int(project_id))
+    project_key = ndb.Key("Project", base62_decode(project_id))
     result = (
       project_key,
       Issue.gen_key(project_key, will_start_at, user_id, user_name), # issue_key
-      datetime.fromtimestamp(int(start_at)),  # start_at
-      datetime.fromtimestamp(int(end_at)),  # end_at
+      datetime.fromtimestamp(base62_decode(start_at)),  # start_at
+      datetime.fromtimestamp(base62_decode(end_at)),  # end_at
       ndb.Key("User", user_id),
       user_name,
       project_name,
@@ -367,7 +373,7 @@ class Comment(ModelMixinBase):
       will_start_at,
       user_id,
       name,
-      str(int(time.mktime(time_at.timetuple()))), #time_at
+      base62_encode(int(time.mktime(time_at.timetuple()))), #time_at
       author_key.string_id(), # author_id
       author_name,
     )
@@ -385,10 +391,10 @@ class Comment(ModelMixinBase):
       author_name,
     ) = key.string_id().split("/", 6)
 
-    project_key = ndb.Key("Project", int(project_id))
+    project_key = ndb.Key("Project", base62_decode(project_id))
     result = (
       Issue.gen_key(project_key, will_start_at, user_id, author_name), # issue_key
-      datetime.fromtimestamp(int(time_at)), # time_at
+      datetime.fromtimestamp(base62_decode(time_at)), # time_at
       ndb.Key("User", author_id), # author_key
       author_name,
     )
