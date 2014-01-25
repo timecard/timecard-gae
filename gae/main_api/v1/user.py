@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from google.appengine.api import search
 from google.appengine.ext import (
   deferred,
@@ -35,11 +34,11 @@ class User(tap.endpoints.CRUDService):
   @endpoints.method(message.UserReceiveListCollection, message.UserSendCollection)
   @ndb.synctasklet
   def list(self, request):
-    user_key_list = list()
+    key_list = list()
     for user_receive_list in request.items:
-      user_key_list.append(ndb.Key(model.User, user_receive_list.key))
-    if user_key_list:
-      entities = yield ndb.get_multi_async(user_key_list)
+      key_list.append(ndb.Key(model.User, user_receive_list.key))
+    if key_list:
+      entities = yield ndb.get_multi_async(key_list)
     else:
       raise endpoints.BadRequestException("Bad query")
     items = list()
@@ -56,12 +55,12 @@ class User(tap.endpoints.CRUDService):
   def search(self, request):
     if len(request.search) < 3:
       raise endpoints.BadRequestException("Bad query")
-    user_key_list = list()
+    key_list = list()
     for document in UserSearchIndex.search_index.search(request.search):
-      user_key_list.append(ndb.Key(model.User, document.doc_id))
+      key_list.append(ndb.Key(model.User, document.doc_id))
     items = list()
-    if user_key_list:
-      entities = yield ndb.get_multi_async(user_key_list)
+    if key_list:
+      entities = yield ndb.get_multi_async(key_list)
       for user in entities:
         items.append(message.UserSend(key=user.user_id,
                                       name=user.name,
@@ -139,9 +138,7 @@ class UserSearchIndex(object):
   def put(cls, doc_id, name, language):
     if language == "ja":
       from .util import jlp_api
-      result_set = jlp_api.ma.get_result_set(name)
-      words = filter(lambda x: x.pos not in (u"助詞", u"特殊"), result_set.ma_result.words)
-      fields = [search.TextField(name="a", value=word.surface, language=language) for word in words]
+      fields = [search.TextField(name="a", value=word, language=language) for word in jlp_api.ma(name)]
     else:
       fields = [search.TextField(name="a", value=name, language=language)]
     cls.search_index.put(search.Document(
