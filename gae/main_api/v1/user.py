@@ -53,10 +53,19 @@ class User(tap.endpoints.CRUDService):
   @endpoints.method(message.UserReceiveSearch, message.UserSendCollection)
   @ndb.synctasklet
   def search(self, request):
-    if len(request.search) < 3:
+    if len(request.query.encode("utf-8")) < 3:
       raise endpoints.BadRequestException("Bad query")
+    query = search.Query(
+      query_string = request.query,
+      options = search.QueryOptions(
+        limit  = 20,
+        cursor = search.Cursor(web_safe_string=request.pagination),
+        ids_only = True,
+      ),
+    )
     key_list = list()
-    for document in UserSearchIndex.search_index.search(request.search):
+    documents = UserSearchIndex.search_index.search(query)
+    for document in documents:
       key_list.append(ndb.Key(model.User, document.doc_id))
     items = list()
     if key_list:
@@ -65,8 +74,13 @@ class User(tap.endpoints.CRUDService):
         items.append(message.UserSend(key=user.user_id,
                                       name=user.name,
                                       language=user.language))
+    if documents.cursor:
+      cursor_string = documents.cursor.web_safe_string
+    else:
+      cursor_string = None
     raise ndb.Return(message.UserSendCollection(
       items = items,
+      pagination = cursor_string,
     ))
 
   @endpoints.method(message.UserReceive, message.UserSend)

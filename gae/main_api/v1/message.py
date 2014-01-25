@@ -12,6 +12,7 @@ class UserSend(messages.Message):
 
 class UserSendCollection(messages.Message):
   items       = messages.MessageField(UserSend, 1, repeated=True)
+  pagination  = messages.StringField (2, required=False)
 
 class UserReceiveList(messages.Message):
   key         = messages.StringField (1, required=True)
@@ -20,7 +21,8 @@ class UserReceiveListCollection(messages.Message):
   items       = messages.MessageField(UserReceiveList, 1, repeated=True)
 
 class UserReceiveSearch(messages.Message):
-  search      = messages.StringField (1, required=True)
+  query       = messages.StringField (1, required=True)
+  pagination  = messages.StringField (2, required=False)
 
 
 class ProjectReceiveNew(messages.Message):
