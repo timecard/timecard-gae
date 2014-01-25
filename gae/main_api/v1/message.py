@@ -18,7 +18,9 @@ class UserReceiveList(messages.Message):
 
 class UserReceiveListCollection(messages.Message):
   items       = messages.MessageField(UserReceiveList, 1, repeated=True)
-  search      = messages.StringField (2, required=False)
+
+class UserReceiveSearch(messages.Message):
+  search      = messages.StringField (1, required=True)
 
 
 class ProjectReceiveNew(messages.Message):

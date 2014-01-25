@@ -16,11 +16,10 @@ import main_model as model
 from . import message
 from .api import api
 
-search_index = search.Index(name="timecard:user")
-
 class user(object):
+  @staticmethod
   @ndb.tasklet
-  def store(cls, user):
+  def store(user):
     key = ndb.Key(model.User, user.user_id())
     entity = yield key.get_async()
     if entity is None:
@@ -28,31 +27,7 @@ class user(object):
     entity.name = user.name
     entity.language = user.language
     entity.put_async()
-    cls.update_search_index(user)
-
-  @classmethod
-  def update_search_index(cls, user):
-    if user.language == "ja":
-      queue = "yahoo-japan-jlp-ma"
-    else:
-      queue = "default"
-    deferred.defer(cls._update_search_index,
-                   user.user_id(), user.name, user.language,
-                   _queue=queue)
-
-  @classmethod
-  def _update_search_index(cls, user_id, name, language):
-    if language == "ja":
-      from .util import jlp_api
-      result_set = jlp_api.ma.get_result_set(name)
-      words = filter(lambda x: x.pos not in (u"助詞", u"特殊"), result_set.ma_result.words)
-      fields = [search.TextField(name="name", value=word.surface, language=language) for word in words]
-    else:
-      fields = [search.TextField(name="name", value=name, language=language)]
-    search_index.put(search.Document(
-      doc_id = user_id,
-      fields = fields,
-    ))
+    UserSearchIndex.update(user)
 
 @api.api_class(resource_name="user", path="user")
 class User(tap.endpoints.CRUDService):
@@ -60,19 +35,11 @@ class User(tap.endpoints.CRUDService):
   @endpoints.method(message.UserReceiveListCollection, message.UserSendCollection)
   @ndb.synctasklet
   def list(self, request):
-    if len(filter(lambda x:x is not None, [len(request.items) or None, request.search])) != 1:
-      raise endpoints.BadRequestException("Bad query")
     user_key_list = list()
     for user_receive_list in request.items:
       user_key_list.append(ndb.Key(model.User, user_receive_list.key))
     if user_key_list:
       entities = yield ndb.get_multi_async(user_key_list)
-      cursor = more = None
-    elif request.search not in [None, ""]:
-      for document in search_index.search(request.search):
-        user_key_list.append(ndb.Key(model.User, document.doc_id))
-      entities = yield ndb.get_multi_async(user_key_list)
-      cursor = more = None
     else:
       raise endpoints.BadRequestException("Bad query")
     items = list()
@@ -80,6 +47,25 @@ class User(tap.endpoints.CRUDService):
       items.append(message.UserSend(key=user.user_id,
                                     name=user.name,
                                     language=user.language))
+    raise ndb.Return(message.UserSendCollection(
+      items = items,
+    ))
+
+  @endpoints.method(message.UserReceiveSearch, message.UserSendCollection)
+  @ndb.synctasklet
+  def search(self, request):
+    if len(request.search) < 3:
+      raise endpoints.BadRequestException("Bad query")
+    user_key_list = list()
+    for document in UserSearchIndex.search_index.search(request.search):
+      user_key_list.append(ndb.Key(model.User, document.doc_id))
+    items = list()
+    if user_key_list:
+      entities = yield ndb.get_multi_async(user_key_list)
+      for user in entities:
+        items.append(message.UserSend(key=user.user_id,
+                                      name=user.name,
+                                      language=user.language))
     raise ndb.Return(message.UserSendCollection(
       items = items,
     ))
@@ -104,7 +90,7 @@ class User(tap.endpoints.CRUDService):
     future = entity.put_async()
     if future.check_success():
       raise future.get_exception()
-    user.update_search_index(entity)
+    UserSearchIndex.update(entity)
     raise ndb.Return(message.UserSend(
       key       = entity.key.string_id(),
       name      = entity.name,
@@ -128,9 +114,37 @@ class User(tap.endpoints.CRUDService):
     future = entity.put_async()
     if future.check_success():
       raise future.get_exception()
-    user.update_search_index(entity)
+    UserSearchIndex.update(entity)
     raise ndb.Return(message.UserSend(
       key       = entity.key.string_id(),
       name      = entity.name,
       language  = entity.language,
+    ))
+
+class UserSearchIndex(object):
+
+  search_index = search.Index(name="timecard:user")
+
+  @classmethod
+  def update(cls, user):
+    if user.language == "ja":
+      queue = "yahoo-japan-jlp-ma"
+    else:
+      queue = "default"
+    deferred.defer(cls.put,
+                   user.user_id(), user.name, user.language,
+                   _queue=queue)
+
+  @classmethod
+  def put(cls, doc_id, name, language):
+    if language == "ja":
+      from .util import jlp_api
+      result_set = jlp_api.ma.get_result_set(name)
+      words = filter(lambda x: x.pos not in (u"助詞", u"特殊"), result_set.ma_result.words)
+      fields = [search.TextField(name="a", value=word.surface, language=language) for word in words]
+    else:
+      fields = [search.TextField(name="a", value=name, language=language)]
+    cls.search_index.put(search.Document(
+      doc_id = doc_id,
+      fields = fields,
     ))
