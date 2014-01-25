@@ -33,11 +33,16 @@ class ProjectReceiveNew(messages.Message):
 class ProjectReceiveList(messages.Message):
   pagination  = messages.StringField (1, required=False)
 
+class ProjectReceiveSearch(messages.Message):
+  query       = messages.StringField (1, required=True)
+  pagination  = messages.StringField (2, required=False)
+
 class ProjectReceive(messages.Message):
   key         = messages.IntegerField(1, required=True)
   name        = messages.StringField (2, required=True)
   description = messages.StringField (3, default="")
   is_public   = messages.BooleanField(4, default=True)
+  language    = messages.StringField (5, required=True)
 
 class ProjectSend(messages.Message):
   key         = messages.IntegerField(1, required=True)
@@ -48,10 +53,11 @@ class ProjectSend(messages.Message):
   archive     = messages.BooleanField(6, required=True)
   admin       = messages.StringField (7, repeated=True)
   member      = messages.StringField (8, repeated=True)
+  language    = messages.StringField (9, required=True)
 
 class ProjectSendCollection(messages.Message):
   items       = messages.MessageField(ProjectSend, 1, repeated=True)
-  pagination  = messages.StringField (2, required=False)
+  pagination  = messages.StringField (3, required=False)
 
 
 class IssueReceiveNew(messages.Message):
