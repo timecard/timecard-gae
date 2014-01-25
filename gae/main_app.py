@@ -67,7 +67,7 @@ class Settings(BaseHandler):
       if language is not None:
         user.language = language
       user.set_to_session(self.session)
-      future = api_user.user_store(user)
+      future = api_user.store(user)
       if future.check_success():
         logging.error(future.get_exception())
         self.abort(500)

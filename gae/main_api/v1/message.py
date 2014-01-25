@@ -19,7 +19,8 @@ class UserReceiveList(messages.Message):
 
 class UserReceiveListCollection(messages.Message):
   items       = messages.MessageField(UserReceiveList, 1, repeated=True)
-  pagination  = messages.StringField (2, required=False)
+  search      = messages.StringField (2, required=False)
+  pagination  = messages.StringField (3, required=False)
 
 
 class ProjectReceiveNew(messages.Message):

@@ -1,4 +1,9 @@
-from google.appengine.ext import ndb
+# -*- coding: utf-8 -*-
+from google.appengine.api import search
+from google.appengine.ext import (
+  deferred,
+  ndb,
+)
 from protorpc import (
   message_types,
 )
@@ -11,15 +16,34 @@ import main_model as model
 from . import message
 from .api import api
 
-@ndb.tasklet
-def user_store(user):
-  key = ndb.Key(model.User, user.user_id())
-  entity = yield key.get_async()
-  if entity is None:
-    entity = model.User(key=key)
-  entity.name = user.name
-  entity.language = user.language
-  entity.put_async()
+search_index = search.Index(name="timecard:user")
+
+class user(object):
+  @staticmethod
+  @ndb.tasklet
+  def store(user_store):
+    cls = user
+    key = ndb.Key(model.User, user_store.user_id())
+    entity = yield key.get_async()
+    if entity is None:
+      entity = model.User(key=key)
+    entity.name = user_store.name
+    entity.language = user_store.language
+    entity.put_async()
+    deferred.defer(cls.update_search_index,
+                   user_store.user_id(), user_store.name, user_store.language,
+                   _queue="yahoo-japan-jlp-ma")
+
+  @classmethod
+  def update_search_index(cls, user_id, name, language):
+    from .util import jlp_api
+    result_set = jlp_api.ma.get_result_set(name)
+    words = filter(lambda x: x.pos not in (u"助詞", u"特殊"), result_set.ma_result.words)
+    document = search.Document(
+      doc_id = user_id,
+      fields = [search.TextField(name="name", value=word.surface, language=language) for word in words],
+    )
+    search_index.put(document)
 
 @api.api_class(resource_name="user", path="user")
 class User(tap.endpoints.CRUDService):
@@ -27,20 +51,27 @@ class User(tap.endpoints.CRUDService):
   @endpoints.method(message.UserReceiveListCollection, message.UserSendCollection)
   @ndb.synctasklet
   def list(self, request):
+    if len(filter(lambda x:x is not None, [len(request.items) or None, request.search, request.pagination])) != 1:
+      raise endpoints.BadRequestException("Bad query")
     user_key_list = list()
     for user_receive_list in request.items:
       user_key_list.append(ndb.Key(model.User, user_receive_list.key))
     if user_key_list:
-      if request.pagination:
-        raise BadRequestException()
       entities = yield ndb.get_multi_async(user_key_list)
       cursor = more = None
-    else:
+    elif request.search not in [None, ""]:
+      for document in search_index.search(request.search):
+        user_key_list.append(ndb.Key(model.User, document.doc_id))
+      entities = yield ndb.get_multi_async(user_key_list)
+      cursor = more = None
+    elif request.pagination not in [None, ""]:
       entities, cursor, more = yield tap.fetch_page_async(
         query = model.User.query(),
         cursor_string = request.pagination,
         page = 20,
       )
+    else:
+      raise endpoints.BadRequestException("Bad query")
     items = list()
     for user in entities:
       items.append(message.UserSend(key=user.user_id,
