@@ -58,7 +58,7 @@ class User(tap.endpoints.CRUDService):
   @endpoints.method(message.UserReceiveListCollection, message.UserSendCollection)
   @ndb.synctasklet
   def list(self, request):
-    if len(filter(lambda x:x is not None, [len(request.items) or None, request.search, request.pagination])) != 1:
+    if len(filter(lambda x:x is not None, [len(request.items) or None, request.search])) != 1:
       raise endpoints.BadRequestException("Bad query")
     user_key_list = list()
     for user_receive_list in request.items:
@@ -71,12 +71,6 @@ class User(tap.endpoints.CRUDService):
         user_key_list.append(ndb.Key(model.User, document.doc_id))
       entities = yield ndb.get_multi_async(user_key_list)
       cursor = more = None
-    elif request.pagination not in [None, ""]:
-      entities, cursor, more = yield tap.fetch_page_async(
-        query = model.User.query(),
-        cursor_string = request.pagination,
-        page = 20,
-      )
     else:
       raise endpoints.BadRequestException("Bad query")
     items = list()
@@ -86,7 +80,6 @@ class User(tap.endpoints.CRUDService):
                                     language=user.language))
     raise ndb.Return(message.UserSendCollection(
       items = items,
-      pagination = cursor.urlsafe() if more else None,
     ))
 
   @endpoints.method(message.UserReceive, message.UserSend)
