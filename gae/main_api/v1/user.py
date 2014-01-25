@@ -19,27 +19,29 @@ from .api import api
 search_index = search.Index(name="timecard:user")
 
 class user(object):
-  @staticmethod
   @ndb.tasklet
-  def store(user_store):
-    cls = user
-    key = ndb.Key(model.User, user_store.user_id())
+  def store(cls, user):
+    key = ndb.Key(model.User, user.user_id())
     entity = yield key.get_async()
     if entity is None:
       entity = model.User(key=key)
-    entity.name = user_store.name
-    entity.language = user_store.language
+    entity.name = user.name
+    entity.language = user.language
     entity.put_async()
-    if user_store.language == "ja":
+    cls.update_search_index(user)
+
+  @classmethod
+  def update_search_index(cls, user):
+    if user.language == "ja":
       queue = "yahoo-japan-jlp-ma"
     else:
       queue = "default"
-    deferred.defer(cls.update_search_index,
-                   user_store.user_id(), user_store.name, user_store.language,
+    deferred.defer(cls._update_search_index,
+                   user.user_id(), user.name, user.language,
                    _queue=queue)
 
   @classmethod
-  def update_search_index(cls, user_id, name, language):
+  def _update_search_index(cls, user_id, name, language):
     if language == "ja":
       from .util import jlp_api
       result_set = jlp_api.ma.get_result_set(name)
@@ -90,18 +92,24 @@ class User(tap.endpoints.CRUDService):
       raise endpoints.UnauthorizedException()
 
     user_key = ndb.Key(model.User, session_user.user_id())
-    user = yield user_key.get_async()
-    if user is not None:
+    entity = yield user_key.get_async()
+    if entity is not None:
       raise endpoints.ForbiddenException()
 
-    user.name = request.name
-    user.language = request.language
-    future = user.put_async()
+    entity = ndb.User(
+      key       = user_key,
+      name      = request.name,
+      language  = request.language,
+    )
+    future = entity.put_async()
     if future.check_success():
       raise future.get_exception()
-    raise ndb.Return(message.UserSend(key=user.user_id,
-                                      name=user.name,
-                                      language=user.language))
+    user.update_search_index(entity)
+    raise ndb.Return(message.UserSend(
+      key       = entity.key.string_id(),
+      name      = entity.name,
+      language  = entity.language,
+    ))
 
   @endpoints.method(message.UserReceive, message.UserSend)
   @ndb.synctasklet
@@ -111,15 +119,18 @@ class User(tap.endpoints.CRUDService):
       raise endpoints.UnauthorizedException()
 
     user_key = ndb.Key(model.User, session_user.user_id())
-    user = yield user_key.get_async()
-    if user is None:
+    entity = yield user_key.get_async()
+    if entity is None:
       raise endpoints.BadRequestException()
 
-    user.name = request.name
-    user.language = request.language
-    future = user.put_async()
+    entity.name = request.name
+    entity.language = request.language
+    future = entity.put_async()
     if future.check_success():
       raise future.get_exception()
-    raise ndb.Return(message.UserSend(key=user.user_id,
-                                      name=user.name,
-                                      language=user.language))
+    user.update_search_index(entity)
+    raise ndb.Return(message.UserSend(
+      key       = entity.key.string_id(),
+      name      = entity.name,
+      language  = entity.language,
+    ))
