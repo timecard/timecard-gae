@@ -30,20 +30,27 @@ class user(object):
     entity.name = user_store.name
     entity.language = user_store.language
     entity.put_async()
+    if user_store.language == "ja":
+      queue = "yahoo-japan-jlp-ma"
+    else:
+      queue = "default"
     deferred.defer(cls.update_search_index,
                    user_store.user_id(), user_store.name, user_store.language,
-                   _queue="yahoo-japan-jlp-ma")
+                   _queue=queue)
 
   @classmethod
   def update_search_index(cls, user_id, name, language):
-    from .util import jlp_api
-    result_set = jlp_api.ma.get_result_set(name)
-    words = filter(lambda x: x.pos not in (u"助詞", u"特殊"), result_set.ma_result.words)
-    document = search.Document(
+    if language == "ja":
+      from .util import jlp_api
+      result_set = jlp_api.ma.get_result_set(name)
+      words = filter(lambda x: x.pos not in (u"助詞", u"特殊"), result_set.ma_result.words)
+      fields = [search.TextField(name="name", value=word.surface, language=language) for word in words]
+    else:
+      fields = [search.TextField(name="name", value=name, language=language)]
+    search_index.put(search.Document(
       doc_id = user_id,
-      fields = [search.TextField(name="name", value=word.surface, language=language) for word in words],
-    )
-    search_index.put(document)
+      fields = fields,
+    ))
 
 @api.api_class(resource_name="user", path="user")
 class User(tap.endpoints.CRUDService):
