@@ -223,6 +223,7 @@ def in_namespace(namespace):
 
 def parse_vars(arg_name, stack_level=2):
   """
+
   >>> @parse_vars("bar")
   ... def x(*argv, **kwargv):
   ...   return argv, kwargv
@@ -300,20 +301,47 @@ def on_namespace(namespace):
 
 # Functions
 
-def base_encode(alphabet, num):
+def base_decoder(alphabet):
   """
-  >>> base_encode('23456789ABCDEFGHJKLMNPQRSTUVWXYZ', 1234567890)
+
+  >>> base32_decode = base_decoder("23456789ABCDEFGHJKLMNPQRSTUVWXYZ")
+  >>> base32_decode("36TE2QL")
+  1234567890
+
+  Note: will return 0 if given empty string
+  >>> base32_decode("")
+  0
+  """
+  reverse_base = dict((c, i) for i, c in enumerate(alphabet))
+  length = len(reverse_base)
+
+  def base_decode(string):
+    num = 0
+    for index, char in enumerate(reversed(string)):
+      num += (length ** index) * reverse_base[char]
+    return num
+
+  return base_decode
+
+def base_encoder(alphabet):
+  """
+
+  >>> base32_encode = base_encoder("23456789ABCDEFGHJKLMNPQRSTUVWXYZ")
+  >>> base32_encode(1234567890)
   '36TE2QL'
   """
   base = len(alphabet)
-  if (num == 0):
-    return alphabet[0]
-  result = list()
-  result_append = result.append
-  while num:
-    result_append(alphabet[num % base])
-    num = num // base
-  return "".join(reversed(result))
+
+  def func(num):
+    if num == 0:
+      return alphabet[0]
+    result = ""
+    while num != 0:
+      result = alphabet[num % base] + result
+      num /= base
+    return result
+
+  return func
 
 def config_to_dict(config):
   result = dict(config._defaults)
@@ -448,6 +476,7 @@ def get_keys_only(query):
 
 def get_vars_from_frame(args, stack_level=1):
   """
+
   >>> def f(arg1, arg2=None):
   ...   local_value1 = "val1"
   ...   local_value2 = "val2"
@@ -473,6 +502,18 @@ def fetch_keys_only(query, limit=None):
   except apiproxy_errors.OverQuotaError:
     entities = yield query.fetch_async(limit)
     raise ndb.Return([entity.key for entity in entities])
+
+@ndb.tasklet
+def fetch_page_async(query, page=10, cursor_string=None, cursor=None, keys_only=False):
+  if cursor_string is None:
+    cursor_string = ""
+  if cursor is None:
+    try:
+      cursor = ndb.Cursor.from_websafe_string(cursor_string)
+    except datastore_errors.BadValueError:
+      cursor = ndb.Cursor.from_websafe_string("")
+  results, cursor, more = yield query.fetch_page_async(page, start_cursor=cursor, keys_only=keys_only)
+  raise ndb.Return(results, cursor, more)
 
 def make_synctasklet(tasklet):
 
@@ -1468,15 +1509,10 @@ class RequestHandler(webapp2.RequestHandler, GoogleAnalyticsMixin):
     headers = (("Content-Type", mimetype),)
     return body, headers
 
-  @ndb.tasklet
-  def fetch_page_async(self, query, page=10, cursor=None, keys_only=False):
-    if cursor is None:
-      try:
-        cursor = ndb.Cursor.from_websafe_string(self.request.query_string)
-      except datastore_errors.BadValueError:
-        cursor = ndb.Cursor.from_websafe_string("")
-    results, cursor, more = yield query.fetch_page_async(page, start_cursor=cursor, keys_only=keys_only)
-    raise ndb.Return(results, cursor, more)
+  def fetch_page_async(self, query, page=10, cursor_string=None, cursor=None, keys_only=False):
+    if cursor_string is None:
+      cursor_string = self.request.query_string
+    return fetch_page_async(query, page, cursor_string, cursor, keys_only)
 
   @ndb.synctasklet
   def proxy(self, url=None, payload=None, method=None, headers=None):
@@ -1841,6 +1877,7 @@ def end_recording(status, firepython_set_extension_data=None):
 
 def save_record(status):
   """
+
   >>> save_record("200")
   True
   >>> save_record("500")
