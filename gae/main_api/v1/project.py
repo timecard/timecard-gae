@@ -125,7 +125,8 @@ class Project(tap.endpoints.CRUDService):
     )
     _project_key = yield project.put_async()
 
-    ProjectSearchIndex.update(project)
+    if project.is_public:
+      ProjectSearchIndex.update(project, will_un_public=False)
 
     raise ndb.Return(message.ProjectSend(
       key         = project.key.integer_id(),
