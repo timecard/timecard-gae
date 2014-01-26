@@ -30,6 +30,20 @@ class user(object):
 @api.api_class(resource_name="user", path="user")
 class User(tap.endpoints.CRUDService):
 
+  @endpoints.method(message_types.VoidMessage, message.UserSend)
+  @ndb.synctasklet
+  def get(self, _request):
+    user_key = ndb.Key(model.User, self._get_user_key_id())
+    entity = yield user_key.get_async()
+    if entity is None:
+      raise endpoints.NotFoundException()
+
+    raise ndb.Return(message.UserSend(
+      key       = entity.key.string_id(),
+      name      = entity.name,
+      language  = entity.language,
+    ))
+
   @endpoints.method(message.UserReceiveListCollection, message.UserSendCollection)
   @ndb.synctasklet
   def list(self, request):
