@@ -1,5 +1,5 @@
 import endpoints
 
-api = endpoints.api(name="timecard", version="v1dev")
+api = endpoints.api(name="timecard", version="dev")
 
 api_services = [api]
