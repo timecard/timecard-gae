@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import tap
 from pyahooapis import jlp
 
 api = jlp.JLPAPIs("dj0zaiZpPUNoZVZJaUVyTU1KaCZzPWNvbnN1bWVyc2VjcmV0Jng9MGY-")
