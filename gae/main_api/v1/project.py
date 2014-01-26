@@ -24,14 +24,6 @@ class Project(tap.endpoints.CRUDService):
   @ndb.synctasklet
   def list(self, request):
     import tap
-    current_user = endpoints.get_current_user()
-    if current_user is None:
-      raise endpoints.UnauthorizedException()
-    current_user.email()
-    current_user.nickname()
-    import logging
-    logging.error(type(current_user.user_id()))
-
     session_user = self._get_user()
     if session_user is None:
       user = None
