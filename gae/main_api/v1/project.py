@@ -57,7 +57,7 @@ class Project(tap.endpoints.CRUDService):
         archive     = project.archive    ,
         admin       = [key.string_id() for key in project.admin],
         member      = [key.string_id() for key in project.member],
-        language    = user.language      ,
+        language    = project.language      ,
       ))
     raise ndb.Return(message.ProjectSendCollection(
       items = items,
