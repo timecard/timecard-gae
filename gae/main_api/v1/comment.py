@@ -30,12 +30,12 @@ class Comment(tap.endpoints.CRUDService):
     else:
       raise endpoints.BadRequestException()
 
-    session_user = self._get_user()
-    if session_user is None:
+    user_id = self._get_user_key_id(raises=False)
+    if user_id is None:
       user = None
       project = yield project_key.get_async()
     else:
-      user_key = ndb.Key(model.User, session_user.user_id())
+      user_key = ndb.Key(model.User, user_id)
       user, project = yield ndb.get_multi_async((user_key, project_key))
 
     if not project:
@@ -73,12 +73,7 @@ class Comment(tap.endpoints.CRUDService):
   @endpoints.method(message.CommentReceive, message.CommentSend)
   @ndb.synctasklet
   def create(self, request):
-    session_user = self._get_user()
-    if session_user is None:
-      raise endpoints.UnauthorizedException()
-
-    user_id = session_user.user_id()
-    user_key = ndb.Key(model.User, user_id)
+    user_key = ndb.Key(model.User, self._get_user_key_id())
     issue_key = ndb.Key(model.Issue, request.issue)
     project_key, _will_start_at, _user_id, _name = model.Issue.parse_key(issue_key)
     user, issue, project = yield ndb.get_multi_async((user_key, issue_key, project_key))
@@ -113,12 +108,7 @@ class Comment(tap.endpoints.CRUDService):
   @endpoints.method(message.CommentReceiveUpdate, message.CommentSend)
   @ndb.synctasklet
   def update(self, request):
-    session_user = self._get_user()
-    if session_user is None:
-      raise endpoints.UnauthorizedException()
-
-    user_id = session_user.user_id()
-    user_key = ndb.Key(model.User, user_id)
+    user_key = ndb.Key(model.User, self._get_user_key_id())
     comment_key = ndb.Key(model.Comment, request.key)
     user, comment = yield ndb.get_multi_async((user_key, comment_key))
 

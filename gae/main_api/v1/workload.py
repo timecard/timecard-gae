@@ -23,12 +23,12 @@ class WorkLoad(tap.endpoints.CRUDService):
     project_key = ndb.Key(model.Project, request.project)
     workload_query_key = tap.base62_encode(project_key.integer_id())
 
-    session_user = self._get_user()
-    if session_user is None:
+    user_id = self._get_user_key_id(raises=False)
+    if user_id is None:
       user = None
       project = yield project_key.get_async()
     else:
-      user_key = ndb.Key(model.User, session_user.user_id())
+      user_key = ndb.Key(model.User, user_id)
       user, project = yield ndb.get_multi_async((user_key, project_key))
 
     if not project:
@@ -102,12 +102,7 @@ class WorkLoad(tap.endpoints.CRUDService):
   @endpoints.method(message.WorkLoadReceiveNew, message.WorkLoadSend)
   @ndb.synctasklet
   def create(self, request):
-    session_user = self._get_user()
-    if session_user is None:
-      raise endpoints.UnauthorizedException()
-
-    user_id = session_user.user_id()
-    user_key = ndb.Key(model.User, user_id)
+    user_key = ndb.Key(model.User, self._get_user_key_id())
     issue_key = ndb.Key(model.Issue, request.issue)
     project_key, _will_start_at, _user_id, _name = model.Issue.parse_key(issue_key)
     user, issue, project = yield ndb.get_multi_async((user_key, issue_key, project_key))
@@ -157,12 +152,7 @@ class WorkLoad(tap.endpoints.CRUDService):
   @endpoints.method(message_types.VoidMessage, message.WorkLoadSend)
   @ndb.synctasklet
   def get(self, _request):
-    session_user = self._get_user()
-    if session_user is None:
-      raise endpoints.UnauthorizedException()
-
-    user_id = session_user.user_id()
-    user_key = ndb.Key(model.User, user_id)
+    user_key = ndb.Key(model.User, self._get_user_key_id())
     user = yield user_key.get_async()
 
     if not user:
@@ -200,12 +190,7 @@ class WorkLoad(tap.endpoints.CRUDService):
   @ndb.synctasklet
   def finish(self, _request):
     import tap
-    session_user = self._get_user()
-    if session_user is None:
-      raise endpoints.UnauthorizedException()
-
-    user_id = session_user.user_id()
-    user_key = ndb.Key(model.User, user_id)
+    user_key = ndb.Key(model.User, self._get_user_key_id())
     user = yield user_key.get_async()
 
     if not user:

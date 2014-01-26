@@ -24,12 +24,12 @@ class Issue(tap.endpoints.CRUDService):
   def list(self, request):
     import tap
     project_key = ndb.Key(model.Project, request.project)
-    session_user = self._get_user()
-    if session_user is None:
+    user_id = self._get_user_key_id(raises=False)
+    if user_id is None:
       user = None
       project = yield project_key.get_async()
     else:
-      user_key = ndb.Key(model.User, session_user.user_id())
+      user_key = ndb.Key(model.User, user_id)
       user, project = yield ndb.get_multi_async((user_key, project_key))
 
     if not project:
@@ -73,12 +73,12 @@ class Issue(tap.endpoints.CRUDService):
       raise endpoints.BadRequestException("Bad query")
 
     project_key = ndb.Key(model.Project, request.project)
-    session_user = self._get_user()
-    if session_user is None:
+    user_id = self._get_user_key_id(raises=False)
+    if user_id is None:
       user = None
       project = yield project_key.get_async()
     else:
-      user_key = ndb.Key(model.User, session_user.user_id())
+      user_key = ndb.Key(model.User, user_id)
       user, project = yield ndb.get_multi_async((user_key, project_key))
 
     if not project:
@@ -133,11 +133,7 @@ class Issue(tap.endpoints.CRUDService):
   @endpoints.method(message.IssueReceiveNew, message.IssueSend)
   @ndb.synctasklet
   def create(self, request):
-    session_user = self._get_user()
-    if session_user is None:
-      raise endpoints.UnauthorizedException()
-
-    user_key = ndb.Key(model.User, session_user.user_id())
+    user_key = ndb.Key(model.User, self._get_user_key_id())
     project_key = ndb.Key(model.Project, int(request.project))
     if request.assignee is not None:
       assignee_key = ndb.Key(model.User, request.assignee)
@@ -185,11 +181,7 @@ class Issue(tap.endpoints.CRUDService):
   @endpoints.method(message.IssueReceive, message.IssueSend)
   @ndb.synctasklet
   def update(self, request):
-    session_user = self._get_user()
-    if session_user is None:
-      raise endpoints.UnauthorizedException()
-
-    user_key = ndb.Key(model.User, session_user.user_id())
+    user_key = ndb.Key(model.User, self._get_user_key_id())
     issue_key = ndb.Key(model.Issue, request.key)
     project_key, _will_start_at, _user_id, _name = model.Issue.parse_key(issue_key)
     user, issue, project = yield ndb.get_multi_async((user_key, issue_key, project_key))
@@ -223,11 +215,7 @@ class Issue(tap.endpoints.CRUDService):
   @endpoints.method(message.IssueReceiveToggle, message.IssueSend)
   @ndb.synctasklet
   def close(self, request):
-    session_user = self._get_user()
-    if session_user is None:
-      raise endpoints.UnauthorizedException()
-
-    user_key = ndb.Key(model.User, session_user.user_id())
+    user_key = ndb.Key(model.User, self._get_user_key_id())
     issue_key = ndb.Key(model.Issue, request.key)
     project_key, _will_start_at, _user_id, _name = model.Issue.parse_key(issue_key)
     user, issue, project = yield ndb.get_multi_async((user_key, issue_key, project_key))
@@ -256,11 +244,7 @@ class Issue(tap.endpoints.CRUDService):
   @endpoints.method(message.IssueReceiveToggle, message.IssueSend)
   @ndb.synctasklet
   def reopen(self, request):
-    session_user = self._get_user()
-    if session_user is None:
-      raise endpoints.UnauthorizedException()
-
-    user_key = ndb.Key(model.User, session_user.user_id())
+    user_key = ndb.Key(model.User, self._get_user_key_id())
     issue_key = ndb.Key(model.Issue, request.key)
     project_key, _will_start_at, _user_id, _name = model.Issue.parse_key(issue_key)
     user, issue, project = yield ndb.get_multi_async((user_key, issue_key, project_key))
