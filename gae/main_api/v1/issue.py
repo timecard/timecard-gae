@@ -1,7 +1,11 @@
 from datetime import datetime
 import string
 
-from google.appengine.ext import ndb
+from google.appengine.api import search
+from google.appengine.ext import (
+  deferred,
+  ndb,
+)
 from protorpc import (
   message_types,
 )
@@ -64,6 +68,70 @@ class Issue(tap.endpoints.CRUDService):
       pagination = cursor.urlsafe() if more else None,
     ))
 
+  @endpoints.method(message.IssueReceiveSearch, message.IssueSendCollection)
+  @ndb.synctasklet
+  def search(self, request):
+    if len(request.query.encode("utf-8")) < 3:
+      raise endpoints.BadRequestException("Bad query")
+
+    project_key = ndb.Key(model.Project, request.project)
+    session_user = self._get_user()
+    if session_user is None:
+      user = None
+      project = yield project_key.get_async()
+    else:
+      user_key = ndb.Key(model.User, session_user.user_id())
+      user, project = yield ndb.get_multi_async((user_key, project_key))
+
+    if not project:
+      raise endpoints.NotFoundException()
+    if not project.is_public and (not user or user.key not in project.member):
+      raise endpoints.ForbiddenException()
+
+    query = search.Query(
+      query_string = u'a: "{0}" AND p: "{1}"'.format(request.query,
+                                                     base62_encode(project.key.integer_id())),
+      options = search.QueryOptions(
+        limit  = 20,
+        cursor = search.Cursor(web_safe_string=request.pagination),
+        returned_fields = ["i"],
+      ),
+    )
+
+    key_list = list()
+    documents = IssueSearchIndex.search_index.search(query)
+    for document in documents:
+      for field in document.fields:
+        if field.name == "i":
+          key_list.append(ndb.Key(model.Issue, field.value))
+    if key_list:
+      entities = yield ndb.get_multi_async(key_list)
+    else:
+      entities = list()
+
+    items = list()
+    for issue in entities:
+      items.append(message.IssueSend(
+        project       = issue.project_key.integer_id()      ,
+        subject       = issue.subject      ,
+        description   = issue.description  ,
+        assignee      = issue.assignee.integer_id() if issue.assignee else None     ,
+        key           = issue.key.string_id()          ,
+        closed_on     = issue.closed_on    ,
+        will_start_at = issue.will_start_at,
+        author        = issue.author_key.integer_id()       ,
+      ))
+
+    if documents.cursor:
+      cursor_string = documents.cursor.web_safe_string
+    else:
+      cursor_string = None
+
+    raise ndb.Return(message.IssueSendCollection(
+      items = items,
+      pagination = cursor_string,
+    ))
+
   @endpoints.method(message.IssueReceiveNew, message.IssueSend)
   @ndb.synctasklet
   def create(self, request):
@@ -103,6 +171,8 @@ class Issue(tap.endpoints.CRUDService):
     )
     _issue_key = yield issue.put_async()
 
+    IssueSearchIndex.update(issue, project)
+
     raise ndb.Return(message.IssueSend(
       project       = issue.project_key.integer_id()  ,
       subject       = issue.subject      ,
@@ -138,6 +208,8 @@ class Issue(tap.endpoints.CRUDService):
     issue.closed_on   = request.closed_on
     issue.assignee    = ndb.Key(model.User, int(request.assignee)) if issue.assignee else None
     _issue_key = yield issue.put_async()
+
+    IssueSearchIndex.update(issue, project)
 
     raise ndb.Return(message.IssueSend(
       project       = issue.project_key.integer_id()  ,
@@ -214,4 +286,43 @@ class Issue(tap.endpoints.CRUDService):
       closed_on     = issue.closed_on    ,
       will_start_at = issue.will_start_at,
       author        = issue.author_key.integer_id()       ,
+    ))
+
+class IssueSearchIndex(object):
+
+  search_index = search.Index(name="timecard:issue")
+
+  @classmethod
+  def doc_id(cls, issue):
+    return "/".join(issue.key.string_id().split("/", 3)[:-1])
+
+  @classmethod
+  def update(cls, issue, project):
+    doc_id = cls.doc_id(issue)
+    if project.language == "ja":
+      queue = "yahoo-japan-jlp-ma"
+    else:
+      queue = "default"
+    text = " ".join((issue.subject, issue.description))
+    deferred.defer(cls.put,
+                   doc_id, text,
+                   base62_encode(project.key.integer_id()),
+                   issue.key.string_id(),
+                   project.language,
+                   _queue=queue)
+
+  @classmethod
+  def put(cls, doc_id, text, project_id, issue_id, language):
+    if language == "ja":
+      from .util import jlp_api
+      fields = [search.TextField(name="a", value=word, language=language) for word in jlp_api.ma(text)]
+    else:
+      fields = [search.TextField(name="a", value=text, language=language)]
+    fields.extend([
+      search.AtomField(name="p", value=project_id),
+      search.AtomField(name="i", value=issue_id),
+    ])
+    cls.search_index.put(search.Document(
+      doc_id = doc_id,
+      fields = fields,
     ))

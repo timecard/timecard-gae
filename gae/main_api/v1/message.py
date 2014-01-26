@@ -70,6 +70,11 @@ class IssueReceiveList(messages.Message):
   project       = messages.IntegerField      (1, required=True)
   pagination    = messages.StringField       (2, required=False)
 
+class IssueReceiveSearch(messages.Message):
+  project       = messages.IntegerField      (1, required=True)
+  query         = messages.StringField       (2, required=True)
+  pagination    = messages.StringField       (3, required=False)
+
 class IssueReceive(messages.Message):
   key           = messages.StringField       (1, required=True)
   subject       = messages.StringField       (2, required=True)
