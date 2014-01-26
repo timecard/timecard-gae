@@ -14,8 +14,8 @@ import tap.endpoints
 
 import main_model as model
 
-from . import message
-from .api import api
+from api import api
+import message
 
 base62_chars = string.digits + string.letters
 base62_decode = tap.base_decoder(base62_chars)
@@ -219,7 +219,7 @@ class ProjectSearchIndex(object):
   @classmethod
   def put(cls, doc_id, text, language):
     if language == "ja":
-      from .util import jlp_api
+      from util import jlp_api
       fields = [search.TextField(name="a", value=word, language=language) for word in jlp_api.ma(text)]
     else:
       fields = [search.TextField(name="a", value=text, language=language)]

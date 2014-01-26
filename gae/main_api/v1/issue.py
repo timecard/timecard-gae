@@ -15,8 +15,8 @@ import tap.endpoints
 
 import main_model as model
 
-from . import message
-from .api import api
+from api import api
+import message
 
 base62_encode = tap.base_encoder(string.digits + string.letters)
 
@@ -314,7 +314,7 @@ class IssueSearchIndex(object):
   @classmethod
   def put(cls, doc_id, text, project_id, issue_id, language):
     if language == "ja":
-      from .util import jlp_api
+      from util import jlp_api
       fields = [search.TextField(name="a", value=word, language=language) for word in jlp_api.ma(text)]
     else:
       fields = [search.TextField(name="a", value=text, language=language)]

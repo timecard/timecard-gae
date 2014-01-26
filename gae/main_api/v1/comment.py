@@ -9,8 +9,8 @@ import tap.endpoints
 
 import main_model as model
 
-from . import message
-from .api import api
+from api import api
+import message
 
 base62_encode = tap.base_encoder(string.digits + string.letters)
 

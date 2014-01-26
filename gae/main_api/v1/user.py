@@ -12,8 +12,8 @@ import tap.endpoints
 
 import main_model as model
 
-from . import message
-from .api import api
+from api import api
+import message
 
 class user(object):
   @staticmethod
