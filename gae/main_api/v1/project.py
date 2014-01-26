@@ -166,6 +166,11 @@ class Project(tap.endpoints.CRUDService):
     if not user.key in project.admin:
       raise endpoints.ForbiddenException()
 
+    if request.is_public is False and request.is_public is True:
+      will_un_public = True
+    else:
+      will_un_public = False
+
     project.name        = request.name
     project.description = request.description
     project.is_public   = request.is_public
@@ -176,7 +181,7 @@ class Project(tap.endpoints.CRUDService):
     project.language    = request.language
     _project_key = yield project.put_async()
 
-    ProjectSearchIndex.update(project)
+    ProjectSearchIndex.update(project, will_un_public)
 
     raise ndb.Return(message.ProjectSend(
       key         = project.key.integer_id(),
@@ -195,9 +200,11 @@ class ProjectSearchIndex(object):
   search_index = search.Index(name="timecard:project")
 
   @classmethod
-  def update(cls, project):
+  def update(cls, project, will_un_public):
+    if project.is_public is False and will_un_public is False:
+      return
     doc_id = base62_encode(project.key.integer_id())
-    if project.is_public is False:
+    if will_un_public:
       deferred.defer(cls.delete, doc_id)
     else:
       if project.language == "ja":
