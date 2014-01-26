@@ -1,5 +1,4 @@
 from datetime import datetime
-import string
 
 from google.appengine.api import search
 from google.appengine.ext import (
@@ -10,7 +9,6 @@ from protorpc import (
   message_types,
 )
 import endpoints
-import tap
 import tap.endpoints
 
 import main_model as model
@@ -18,14 +16,13 @@ import main_model as model
 from api import api
 import message
 
-base62_encode = tap.base_encoder(string.digits + string.letters)
-
 @api.api_class(resource_name="issue", path="issue")
 class Issue(tap.endpoints.CRUDService):
 
   @endpoints.method(message.IssueReceiveList, message.IssueSendCollection)
   @ndb.synctasklet
   def list(self, request):
+    import tap
     project_key = ndb.Key(model.Project, request.project)
     session_user = self._get_user()
     if session_user is None:
@@ -40,7 +37,7 @@ class Issue(tap.endpoints.CRUDService):
     if not project.is_public and (not user or user.key not in project.member):
       raise endpoints.ForbiddenException()
 
-    project_id = base62_encode(project.key.integer_id())
+    project_id = tap.base62_encode(project.key.integer_id())
     key_start = ndb.Key(model.Issue, project_id)
     key_end   = ndb.Key(model.Issue, "{0}/\xff".format(project_id))
     query = model.Issue.query(ndb.AND(model.Issue.key >= key_start,
@@ -71,6 +68,7 @@ class Issue(tap.endpoints.CRUDService):
   @endpoints.method(message.IssueReceiveSearch, message.IssueSendCollection)
   @ndb.synctasklet
   def search(self, request):
+    import tap
     if len(request.query.encode("utf-8")) < 3:
       raise endpoints.BadRequestException("Bad query")
 
@@ -90,7 +88,7 @@ class Issue(tap.endpoints.CRUDService):
 
     query = search.Query(
       query_string = u'a: "{0}" AND p: "{1}"'.format(request.query,
-                                                     base62_encode(project.key.integer_id())),
+                                                     tap.base62_encode(project.key.integer_id())),
       options = search.QueryOptions(
         limit  = 20,
         cursor = search.Cursor(web_safe_string=request.pagination),
@@ -298,6 +296,7 @@ class IssueSearchIndex(object):
 
   @classmethod
   def update(cls, issue, project):
+    import tap
     doc_id = cls.doc_id(issue)
     if project.language == "ja":
       queue = "yahoo-japan-jlp-ma"
@@ -306,7 +305,7 @@ class IssueSearchIndex(object):
     text = " ".join((issue.subject, issue.description))
     deferred.defer(cls.put,
                    doc_id, text,
-                   base62_encode(project.key.integer_id()),
+                   tap.base62_encode(project.key.integer_id()),
                    issue.key.string_id(),
                    project.language,
                    _queue=queue)

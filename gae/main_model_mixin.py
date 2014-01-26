@@ -1,16 +1,11 @@
 #-* coding: utf-8 -*-
 
 from datetime import datetime
-import string
 import time
 
 from google.appengine.ext import ndb
-import tap
+import tap.endpoints
 import webapp2
-
-base62_chars = string.digits + string.letters
-base62_decode = tap.base_decoder(base62_chars)
-base62_encode = tap.base_encoder(base62_chars)
 
 class ModelMixinBase(object):
   @webapp2.cached_property
@@ -36,10 +31,11 @@ class User(ModelMixinBase):
 class Issue(ModelMixinBase):
   @classmethod
   def gen_key(cls, project_key, will_start_at, author_id, author_name):
+    import tap
     if not isinstance(will_start_at, str):
-      will_start_at = base62_encode(int(time.mktime(will_start_at.timetuple())))
+      will_start_at = tap.base62_encode(int(time.mktime(will_start_at.timetuple())))
     argv = (
-      base62_encode(project_key.integer_id()),
+      tap.base62_encode(project_key.integer_id()),
       will_start_at,
       author_id,
       author_name,
@@ -48,10 +44,11 @@ class Issue(ModelMixinBase):
 
   @classmethod
   def parse_key(cls, key):
+    import tap
     project_id, will_start_at, user_id, name = key.string_id().split("/", 3)
     result = (
-      ndb.Key("Project", base62_decode(project_id)),
-      datetime.fromtimestamp(base62_decode(will_start_at)),
+      ndb.Key("Project", tap.base62_decode(project_id)),
+      datetime.fromtimestamp(tap.base62_decode(will_start_at)),
       user_id,
       name,
     )
@@ -82,9 +79,10 @@ class ActiveWorkLoad(ModelMixinBase):
   @classmethod
   @ndb.synctasklet
   def gen_key(cls, project_key, issue_key, start_at, user_key, user_name):
+    import tap
     project, issue = yield ndb.get_multi_async((project_key, issue_key))
     project_id, will_start_at, author_id, author_name = issue.key.string_id().split("/", 3)
-    start_at = base62_encode(int(time.mktime(start_at.timetuple())))
+    start_at = tap.base62_encode(int(time.mktime(start_at.timetuple())))
     project_name = project.name
     issue_subject = issue.subject
     user_id = user_key.string_id()
@@ -103,6 +101,7 @@ class ActiveWorkLoad(ModelMixinBase):
 
   @classmethod
   def parse_key(cls, key):
+    import tap
     (
       user_id,
       project_id,
@@ -115,11 +114,11 @@ class ActiveWorkLoad(ModelMixinBase):
       user_name,
     ) = key.string_id().split("/", 8)
 
-    project_key = ndb.Key("Project", base62_decode(project_id))
+    project_key = ndb.Key("Project", tap.base62_decode(project_id))
     result = (
       project_key,
       Issue.gen_key(project_key, will_start_at, author_id, author_name), # issue_key
-      datetime.fromtimestamp(base62_decode(start_at)),  # start_at
+      datetime.fromtimestamp(tap.base62_decode(start_at)),  # start_at
       ndb.Key("User", user_id), # user_key
       user_name,
       project_name,
@@ -235,10 +234,11 @@ class WorkLoad(ModelMixinBase):
   @classmethod
   @ndb.synctasklet
   def gen_key(cls, project_key, issue_key, start_at, end_at):
+    import tap
     project, issue = yield ndb.get_multi_async((project_key, issue_key))
     project_id, will_start_at, user_id, user_name = issue.key.string_id().split("/", 3)
-    start_at = base62_encode(int(time.mktime(start_at.timetuple())))
-    end_at = base62_encode(int(time.mktime(end_at.timetuple())))
+    start_at = tap.base62_encode(int(time.mktime(start_at.timetuple())))
+    end_at = tap.base62_encode(int(time.mktime(end_at.timetuple())))
     project_name = project.name
     issue_subject = issue.subject
     argv = (
@@ -255,6 +255,7 @@ class WorkLoad(ModelMixinBase):
 
   @classmethod
   def parse_key(cls, key):
+    import tap
     (
       project_id,
       will_start_at,
@@ -266,12 +267,12 @@ class WorkLoad(ModelMixinBase):
       issue_subject,
     ) = key.string_id().split("/", 7)
 
-    project_key = ndb.Key("Project", base62_decode(project_id))
+    project_key = ndb.Key("Project", tap.base62_decode(project_id))
     result = (
       project_key,
       Issue.gen_key(project_key, will_start_at, user_id, user_name), # issue_key
-      datetime.fromtimestamp(base62_decode(start_at)),  # start_at
-      datetime.fromtimestamp(base62_decode(end_at)),  # end_at
+      datetime.fromtimestamp(tap.base62_decode(start_at)),  # start_at
+      datetime.fromtimestamp(tap.base62_decode(end_at)),  # end_at
       ndb.Key("User", user_id),
       user_name,
       project_name,
@@ -367,13 +368,14 @@ class Comment(ModelMixinBase):
   @classmethod
   @ndb.synctasklet
   def gen_key(cls, issue_key, time_at, author_key, author_name):
+    import tap
     project_id, will_start_at, user_id, name = issue_key.string_id().split("/", 3)
     argv = (
       project_id,
       will_start_at,
       user_id,
       name,
-      base62_encode(int(time.mktime(time_at.timetuple()))), #time_at
+      tap.base62_encode(int(time.mktime(time_at.timetuple()))), #time_at
       author_key.string_id(), # author_id
       author_name,
     )
@@ -381,6 +383,7 @@ class Comment(ModelMixinBase):
 
   @classmethod
   def parse_key(cls, key):
+    import tap
     (
       project_id,
       will_start_at,
@@ -391,10 +394,10 @@ class Comment(ModelMixinBase):
       author_name,
     ) = key.string_id().split("/", 6)
 
-    project_key = ndb.Key("Project", base62_decode(project_id))
+    project_key = ndb.Key("Project", tap.base62_decode(project_id))
     result = (
       Issue.gen_key(project_key, will_start_at, user_id, author_name), # issue_key
-      datetime.fromtimestamp(base62_decode(time_at)), # time_at
+      datetime.fromtimestamp(tap.base62_decode(time_at)), # time_at
       ndb.Key("User", author_id), # author_key
       author_name,
     )

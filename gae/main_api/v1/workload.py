@@ -1,13 +1,11 @@
 from datetime import datetime
 import operator
-import string
 
 from google.appengine.ext import ndb
 from protorpc import (
   message_types,
 )
 import endpoints
-import tap
 import tap.endpoints
 
 import main_model as model
@@ -15,16 +13,15 @@ import main_model as model
 from api import api
 import message
 
-base62_encode = tap.base_encoder(string.digits + string.letters)
-
 @api.api_class(resource_name="workload", path="workload")
 class WorkLoad(tap.endpoints.CRUDService):
 
   @endpoints.method(message.WorkLoadReceiveList, message.WorkLoadSendCollection)
   @ndb.synctasklet
   def list(self, request):
+    import tap
     project_key = ndb.Key(model.Project, request.project)
-    workload_query_key = base62_encode(project_key.integer_id())
+    workload_query_key = tap.base62_encode(project_key.integer_id())
 
     session_user = self._get_user()
     if session_user is None:
@@ -202,6 +199,7 @@ class WorkLoad(tap.endpoints.CRUDService):
   @endpoints.method(message.WorkLoadReceiveClose, message.WorkLoadSend)
   @ndb.synctasklet
   def finish(self, _request):
+    import tap
     session_user = self._get_user()
     if session_user is None:
       raise endpoints.UnauthorizedException()

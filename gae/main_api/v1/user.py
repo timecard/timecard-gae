@@ -7,7 +7,6 @@ from protorpc import (
   message_types,
 )
 import endpoints
-import tap
 import tap.endpoints
 
 import main_model as model
@@ -86,11 +85,7 @@ class User(tap.endpoints.CRUDService):
   @endpoints.method(message.UserReceive, message.UserSend)
   @ndb.synctasklet
   def create(self, request):
-    session_user = self._get_user()
-    if session_user is None:
-      raise endpoints.UnauthorizedException()
-
-    user_key = ndb.Key(model.User, session_user.user_id())
+    user_key = ndb.Key(model.User, self._get_user_key_id())
     entity = yield user_key.get_async()
     if entity is not None:
       raise endpoints.ForbiddenException()
@@ -113,11 +108,7 @@ class User(tap.endpoints.CRUDService):
   @endpoints.method(message.UserReceive, message.UserSend)
   @ndb.synctasklet
   def update(self, request):
-    session_user = self._get_user()
-    if session_user is None:
-      raise endpoints.UnauthorizedException()
-
-    user_key = ndb.Key(model.User, session_user.user_id())
+    user_key = ndb.Key(model.User, self._get_user_key_id())
     entity = yield user_key.get_async()
     if entity is None:
       raise endpoints.BadRequestException()
@@ -140,22 +131,11 @@ class UserSearchIndex(object):
 
   @classmethod
   def update(cls, user):
-    if user.language == "ja":
-      queue = "yahoo-japan-jlp-ma"
-    else:
-      queue = "default"
-    deferred.defer(cls.put,
-                   user.user_id(), user.name, user.language,
-                   _queue=queue)
+    deferred.defer(cls.put, user.user_id, user.name)
 
   @classmethod
-  def put(cls, doc_id, name, language):
-    if language == "ja":
-      from .util import jlp_api
-      fields = [search.TextField(name="a", value=word, language=language) for word in jlp_api.ma(name)]
-    else:
-      fields = [search.TextField(name="a", value=name, language=language)]
+  def put(cls, doc_id, name):
     cls.search_index.put(search.Document(
       doc_id = doc_id,
-      fields = fields,
+      fields = [search.TextField(name="a", value=name)],
     ))

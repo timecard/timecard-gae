@@ -1,6 +1,7 @@
-import string
-
-from google.appengine.api import search
+from google.appengine.api import (
+  oauth,
+  search,
+)
 from google.appengine.ext import (
   deferred,
   ndb,
@@ -9,7 +10,6 @@ from protorpc import (
   message_types,
 )
 import endpoints
-import tap
 import tap.endpoints
 
 import main_model as model
@@ -17,16 +17,21 @@ import main_model as model
 from api import api
 import message
 
-base62_chars = string.digits + string.letters
-base62_decode = tap.base_decoder(base62_chars)
-base62_encode = tap.base_encoder(base62_chars)
-
 @api.api_class(resource_name="project", path="project")
 class Project(tap.endpoints.CRUDService):
 
   @endpoints.method(message.ProjectReceiveList, message.ProjectSendCollection)
   @ndb.synctasklet
   def list(self, request):
+    import tap
+    current_user = endpoints.get_current_user()
+    if current_user is None:
+      raise endpoints.UnauthorizedException()
+    current_user.email()
+    current_user.nickname()
+    import logging
+    logging.error(type(current_user.user_id()))
+
     session_user = self._get_user()
     if session_user is None:
       user = None
@@ -67,6 +72,7 @@ class Project(tap.endpoints.CRUDService):
   @endpoints.method(message.ProjectReceiveSearch, message.ProjectSendCollection)
   @ndb.synctasklet
   def search(self, request):
+    import tap
     if len(request.query.encode("utf-8")) < 3:
       raise endpoints.BadRequestException("Bad query")
 
@@ -82,7 +88,7 @@ class Project(tap.endpoints.CRUDService):
     key_list = list()
     documents = ProjectSearchIndex.search_index.search(query)
     for document in documents:
-      key_list.append(ndb.Key(model.Project, base62_decode(document.doc_id)))
+      key_list.append(ndb.Key(model.Project, tap.base62_decode(document.doc_id)))
     if key_list:
       entities = yield ndb.get_multi_async(key_list)
     else:
@@ -201,9 +207,10 @@ class ProjectSearchIndex(object):
 
   @classmethod
   def update(cls, project, will_un_public):
+    import tap
     if project.is_public is False and will_un_public is False:
       return
-    doc_id = base62_encode(project.key.integer_id())
+    doc_id = tap.base62_encode(project.key.integer_id())
     if will_un_public:
       deferred.defer(cls.delete, doc_id)
     else:
