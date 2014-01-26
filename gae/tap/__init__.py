@@ -44,7 +44,7 @@ from google.appengine.ext import deferred, ndb, zipserve
 from google.appengine.ext.appstats import recording
 from google.appengine.runtime import apiproxy_errors
 
-from . import warmup
+import warmup
 
 
 # Global
@@ -342,6 +342,9 @@ def base_encoder(alphabet):
     return result
 
   return func
+
+base62_decode = base_decoder(string.digits + string.letters)
+base62_encode = base_encoder(string.digits + string.letters)
 
 def config_to_dict(config):
   result = dict(config._defaults)
