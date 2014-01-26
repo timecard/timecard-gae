@@ -95,7 +95,7 @@ class User(tap.endpoints.CRUDService):
     if entity is not None:
       raise endpoints.ForbiddenException()
 
-    entity = ndb.User(
+    entity = model.User(
       key       = user_key,
       name      = request.name,
       language  = request.language,
