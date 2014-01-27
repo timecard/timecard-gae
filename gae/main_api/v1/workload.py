@@ -19,7 +19,7 @@ rate_limit = tap.endpoints.rate_limit(rate=50, size=50, key=tap.endpoints.get_us
 class WorkLoad(tap.endpoints.CRUDService):
 
   @endpoints.method(message.WorkLoadReceiveList, message.WorkLoadSendCollection)
-  @ndb.synctasklet
+  @ndb.toplevel
   @rate_limit
   def list(self, request):
     import tap
@@ -103,7 +103,7 @@ class WorkLoad(tap.endpoints.CRUDService):
     ))
 
   @endpoints.method(message.WorkLoadReceiveNew, message.WorkLoadSend)
-  @ndb.synctasklet
+  @ndb.toplevel
   @rate_limit
   def create(self, request):
     user_key = ndb.Key(model.User, self._get_user_key_id())
@@ -154,7 +154,7 @@ class WorkLoad(tap.endpoints.CRUDService):
     ))
 
   @endpoints.method(message_types.VoidMessage, message.WorkLoadSend)
-  @ndb.synctasklet
+  @ndb.toplevel
   @rate_limit
   def get(self, _request):
     user_key = ndb.Key(model.User, self._get_user_key_id())
@@ -192,7 +192,7 @@ class WorkLoad(tap.endpoints.CRUDService):
     ))
 
   @endpoints.method(message.WorkLoadReceiveClose, message.WorkLoadSend)
-  @ndb.synctasklet
+  @ndb.toplevel
   @rate_limit
   def finish(self, _request):
     import tap

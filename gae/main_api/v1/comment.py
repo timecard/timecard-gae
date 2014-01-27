@@ -16,7 +16,7 @@ rate_limit = tap.endpoints.rate_limit(rate=50, size=50, key=tap.endpoints.get_us
 class Comment(tap.endpoints.CRUDService):
 
   @endpoints.method(message.CommentReceiveList, message.CommentSendCollection)
-  @ndb.synctasklet
+  @ndb.toplevel
   @rate_limit
   def list(self, request):
     import tap
@@ -74,7 +74,7 @@ class Comment(tap.endpoints.CRUDService):
     ))
 
   @endpoints.method(message.CommentReceive, message.CommentSend)
-  @ndb.synctasklet
+  @ndb.toplevel
   @rate_limit
   def create(self, request):
     user_key = ndb.Key(model.User, self._get_user_key_id())
@@ -110,7 +110,7 @@ class Comment(tap.endpoints.CRUDService):
     ))
 
   @endpoints.method(message.CommentReceiveUpdate, message.CommentSend)
-  @ndb.synctasklet
+  @ndb.toplevel
   @rate_limit
   def update(self, request):
     user_key = ndb.Key(model.User, self._get_user_key_id())

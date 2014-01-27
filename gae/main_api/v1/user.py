@@ -33,7 +33,7 @@ class user(object):
 class User(tap.endpoints.CRUDService):
 
   @endpoints.method(message_types.VoidMessage, message.UserSend)
-  @ndb.synctasklet
+  @ndb.toplevel
   @rate_limit
   def get(self, _request):
     user_key = ndb.Key(model.User, self._get_user_key_id())
@@ -48,7 +48,7 @@ class User(tap.endpoints.CRUDService):
     ))
 
   @endpoints.method(message.UserReceiveListCollection, message.UserSendCollection)
-  @ndb.synctasklet
+  @ndb.toplevel
   @rate_limit
   def list(self, request):
     key_list = list()
@@ -68,7 +68,7 @@ class User(tap.endpoints.CRUDService):
     ))
 
   @endpoints.method(message.UserReceiveSearch, message.UserSendCollection)
-  @ndb.synctasklet
+  @ndb.toplevel
   @rate_limit
   def search(self, request):
     if len(request.query.encode("utf-8")) < 3:
@@ -102,7 +102,7 @@ class User(tap.endpoints.CRUDService):
     ))
 
   @endpoints.method(message.UserReceive, message.UserSend)
-  @ndb.synctasklet
+  @ndb.toplevel
   @rate_limit
   def create(self, request):
     user_key = ndb.Key(model.User, self._get_user_key_id())
@@ -126,7 +126,7 @@ class User(tap.endpoints.CRUDService):
     ))
 
   @endpoints.method(message.UserReceive, message.UserSend)
-  @ndb.synctasklet
+  @ndb.toplevel
   @rate_limit
   def update(self, request):
     user_key = ndb.Key(model.User, self._get_user_key_id())

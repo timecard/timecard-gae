@@ -23,7 +23,7 @@ rate_limit = tap.endpoints.rate_limit(rate=50, size=50, key=tap.endpoints.get_us
 class Project(tap.endpoints.CRUDService):
 
   @endpoints.method(message.ProjectReceiveList, message.ProjectSendCollection)
-  @ndb.synctasklet
+  @ndb.toplevel
   @rate_limit
   def list(self, request):
     import tap
@@ -62,7 +62,7 @@ class Project(tap.endpoints.CRUDService):
     ))
 
   @endpoints.method(message.ProjectReceiveSearch, message.ProjectSendCollection)
-  @ndb.synctasklet
+  @ndb.toplevel
   @rate_limit
   def search(self, request):
     import tap
@@ -112,7 +112,7 @@ class Project(tap.endpoints.CRUDService):
     ))
 
   @endpoints.method(message.ProjectReceiveNew, message.ProjectSend)
-  @ndb.synctasklet
+  @ndb.toplevel
   @rate_limit
   def create(self, request):
     user_key = ndb.Key(model.User, self._get_user_key_id())
@@ -146,7 +146,7 @@ class Project(tap.endpoints.CRUDService):
     ))
 
   @endpoints.method(message.ProjectReceive, message.ProjectSend)
-  @ndb.synctasklet
+  @ndb.toplevel
   @rate_limit
   def update(self, request):
     user_key = ndb.Key(model.User, self._get_user_key_id())
