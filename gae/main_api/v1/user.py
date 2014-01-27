@@ -14,6 +14,8 @@ import main_model as model
 from api import api
 import message
 
+rate_limit = tap.endpoints.rate_limit(rate=50, size=50, key=tap.endpoints.get_user_id, tag="timecard:api")
+
 class user(object):
   @staticmethod
   @ndb.tasklet
@@ -32,6 +34,7 @@ class User(tap.endpoints.CRUDService):
 
   @endpoints.method(message_types.VoidMessage, message.UserSend)
   @ndb.synctasklet
+  @rate_limit
   def get(self, _request):
     user_key = ndb.Key(model.User, self._get_user_key_id())
     entity = yield user_key.get_async()
@@ -46,6 +49,7 @@ class User(tap.endpoints.CRUDService):
 
   @endpoints.method(message.UserReceiveListCollection, message.UserSendCollection)
   @ndb.synctasklet
+  @rate_limit
   def list(self, request):
     key_list = list()
     for user_receive_list in request.items:
@@ -65,6 +69,7 @@ class User(tap.endpoints.CRUDService):
 
   @endpoints.method(message.UserReceiveSearch, message.UserSendCollection)
   @ndb.synctasklet
+  @rate_limit
   def search(self, request):
     if len(request.query.encode("utf-8")) < 3:
       raise endpoints.BadRequestException("Bad query")
@@ -98,6 +103,7 @@ class User(tap.endpoints.CRUDService):
 
   @endpoints.method(message.UserReceive, message.UserSend)
   @ndb.synctasklet
+  @rate_limit
   def create(self, request):
     user_key = ndb.Key(model.User, self._get_user_key_id())
     entity = yield user_key.get_async()
@@ -121,6 +127,7 @@ class User(tap.endpoints.CRUDService):
 
   @endpoints.method(message.UserReceive, message.UserSend)
   @ndb.synctasklet
+  @rate_limit
   def update(self, request):
     user_key = ndb.Key(model.User, self._get_user_key_id())
     entity = yield user_key.get_async()

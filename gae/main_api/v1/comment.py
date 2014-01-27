@@ -10,11 +10,14 @@ import main_model as model
 from api import api
 import message
 
+rate_limit = tap.endpoints.rate_limit(rate=50, size=50, key=tap.endpoints.get_user_id, tag="timecard:api")
+
 @api.api_class(resource_name="comment", path="comment")
 class Comment(tap.endpoints.CRUDService):
 
   @endpoints.method(message.CommentReceiveList, message.CommentSendCollection)
   @ndb.synctasklet
+  @rate_limit
   def list(self, request):
     import tap
     if request.issue:
@@ -72,6 +75,7 @@ class Comment(tap.endpoints.CRUDService):
 
   @endpoints.method(message.CommentReceive, message.CommentSend)
   @ndb.synctasklet
+  @rate_limit
   def create(self, request):
     user_key = ndb.Key(model.User, self._get_user_key_id())
     issue_key = ndb.Key(model.Issue, request.issue)
@@ -107,6 +111,7 @@ class Comment(tap.endpoints.CRUDService):
 
   @endpoints.method(message.CommentReceiveUpdate, message.CommentSend)
   @ndb.synctasklet
+  @rate_limit
   def update(self, request):
     user_key = ndb.Key(model.User, self._get_user_key_id())
     comment_key = ndb.Key(model.Comment, request.key)

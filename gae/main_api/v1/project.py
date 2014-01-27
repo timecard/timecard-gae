@@ -17,11 +17,14 @@ import main_model as model
 from api import api
 import message
 
+rate_limit = tap.endpoints.rate_limit(rate=50, size=50, key=tap.endpoints.get_user_id, tag="timecard:api")
+
 @api.api_class(resource_name="project", path="project")
 class Project(tap.endpoints.CRUDService):
 
   @endpoints.method(message.ProjectReceiveList, message.ProjectSendCollection)
   @ndb.synctasklet
+  @rate_limit
   def list(self, request):
     import tap
 
@@ -60,6 +63,7 @@ class Project(tap.endpoints.CRUDService):
 
   @endpoints.method(message.ProjectReceiveSearch, message.ProjectSendCollection)
   @ndb.synctasklet
+  @rate_limit
   def search(self, request):
     import tap
     if len(request.query.encode("utf-8")) < 3:
@@ -109,6 +113,7 @@ class Project(tap.endpoints.CRUDService):
 
   @endpoints.method(message.ProjectReceiveNew, message.ProjectSend)
   @ndb.synctasklet
+  @rate_limit
   def create(self, request):
     user_key = ndb.Key(model.User, self._get_user_key_id())
     user = yield user_key.get_async()
@@ -142,6 +147,7 @@ class Project(tap.endpoints.CRUDService):
 
   @endpoints.method(message.ProjectReceive, message.ProjectSend)
   @ndb.synctasklet
+  @rate_limit
   def update(self, request):
     user_key = ndb.Key(model.User, self._get_user_key_id())
     project_key = ndb.Key(model.Project, request.key)

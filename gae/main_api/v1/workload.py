@@ -13,11 +13,14 @@ import main_model as model
 from api import api
 import message
 
+rate_limit = tap.endpoints.rate_limit(rate=50, size=50, key=tap.endpoints.get_user_id, tag="timecard:api")
+
 @api.api_class(resource_name="workload", path="workload")
 class WorkLoad(tap.endpoints.CRUDService):
 
   @endpoints.method(message.WorkLoadReceiveList, message.WorkLoadSendCollection)
   @ndb.synctasklet
+  @rate_limit
   def list(self, request):
     import tap
     project_key = ndb.Key(model.Project, request.project)
@@ -101,6 +104,7 @@ class WorkLoad(tap.endpoints.CRUDService):
 
   @endpoints.method(message.WorkLoadReceiveNew, message.WorkLoadSend)
   @ndb.synctasklet
+  @rate_limit
   def create(self, request):
     user_key = ndb.Key(model.User, self._get_user_key_id())
     issue_key = ndb.Key(model.Issue, request.issue)
@@ -151,6 +155,7 @@ class WorkLoad(tap.endpoints.CRUDService):
 
   @endpoints.method(message_types.VoidMessage, message.WorkLoadSend)
   @ndb.synctasklet
+  @rate_limit
   def get(self, _request):
     user_key = ndb.Key(model.User, self._get_user_key_id())
     user = yield user_key.get_async()
@@ -188,6 +193,7 @@ class WorkLoad(tap.endpoints.CRUDService):
 
   @endpoints.method(message.WorkLoadReceiveClose, message.WorkLoadSend)
   @ndb.synctasklet
+  @rate_limit
   def finish(self, _request):
     import tap
     user_key = ndb.Key(model.User, self._get_user_key_id())
