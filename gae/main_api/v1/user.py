@@ -36,7 +36,7 @@ class User(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def get(self, _request):
-    user_key = ndb.Key(model.User, self._get_user_key_id())
+    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
     entity = yield user_key.get_async()
     if entity is None:
       raise endpoints.NotFoundException()
@@ -105,7 +105,7 @@ class User(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def create(self, request):
-    user_key = ndb.Key(model.User, self._get_user_key_id())
+    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
     entity = yield user_key.get_async()
     if entity is not None:
       raise endpoints.ForbiddenException()
@@ -129,7 +129,7 @@ class User(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def update(self, request):
-    user_key = ndb.Key(model.User, self._get_user_key_id())
+    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
     entity = yield user_key.get_async()
     if entity is None:
       raise endpoints.BadRequestException()
