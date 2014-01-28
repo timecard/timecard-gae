@@ -29,8 +29,8 @@ class user(object):
     entity.put_async()
     UserSearchIndex.update(user)
 
-@api.api_class(resource_name="user", path="user")
-class User(tap.endpoints.CRUDService):
+@api.api_class(resource_name="me", path="me")
+class Me(tap.endpoints.CRUDService):
 
   @endpoints.method(message_types.VoidMessage, message.UserSend)
   @ndb.toplevel
@@ -46,6 +46,54 @@ class User(tap.endpoints.CRUDService):
       name      = entity.name,
       language  = entity.language,
     ))
+
+  @endpoints.method(message.UserReceive, message.UserSend)
+  @ndb.toplevel
+  @rate_limit
+  def create(self, request):
+    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
+    entity = yield user_key.get_async()
+    if entity is not None:
+      raise endpoints.ForbiddenException()
+
+    entity = model.User(
+      key       = user_key,
+      name      = request.name,
+      language  = request.language,
+    )
+    future = entity.put_async()
+    if future.check_success():
+      raise future.get_exception()
+    UserSearchIndex.update(entity)
+    raise ndb.Return(message.UserSend(
+      key       = entity.key.string_id(),
+      name      = entity.name,
+      language  = entity.language,
+    ))
+
+  @endpoints.method(message.UserReceive, message.UserSend)
+  @ndb.toplevel
+  @rate_limit
+  def update(self, request):
+    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
+    entity = yield user_key.get_async()
+    if entity is None:
+      raise endpoints.BadRequestException()
+
+    entity.name = request.name
+    entity.language = request.language
+    future = entity.put_async()
+    if future.check_success():
+      raise future.get_exception()
+    UserSearchIndex.update(entity)
+    raise ndb.Return(message.UserSend(
+      key       = entity.key.string_id(),
+      name      = entity.name,
+      language  = entity.language,
+    ))
+
+@api.api_class(resource_name="user", path="user")
+class User(tap.endpoints.CRUDService):
 
   @endpoints.method(message.UserReceiveListCollection, message.UserSendCollection)
   @ndb.toplevel
@@ -99,51 +147,6 @@ class User(tap.endpoints.CRUDService):
     raise ndb.Return(message.UserSendCollection(
       items = items,
       pagination = cursor_string,
-    ))
-
-  @endpoints.method(message.UserReceive, message.UserSend)
-  @ndb.toplevel
-  @rate_limit
-  def create(self, request):
-    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
-    entity = yield user_key.get_async()
-    if entity is not None:
-      raise endpoints.ForbiddenException()
-
-    entity = model.User(
-      key       = user_key,
-      name      = request.name,
-      language  = request.language,
-    )
-    future = entity.put_async()
-    if future.check_success():
-      raise future.get_exception()
-    UserSearchIndex.update(entity)
-    raise ndb.Return(message.UserSend(
-      key       = entity.key.string_id(),
-      name      = entity.name,
-      language  = entity.language,
-    ))
-
-  @endpoints.method(message.UserReceive, message.UserSend)
-  @ndb.toplevel
-  @rate_limit
-  def update(self, request):
-    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
-    entity = yield user_key.get_async()
-    if entity is None:
-      raise endpoints.BadRequestException()
-
-    entity.name = request.name
-    entity.language = request.language
-    future = entity.put_async()
-    if future.check_success():
-      raise future.get_exception()
-    UserSearchIndex.update(entity)
-    raise ndb.Return(message.UserSend(
-      key       = entity.key.string_id(),
-      name      = entity.name,
-      language  = entity.language,
     ))
 
 class UserSearchIndex(object):
