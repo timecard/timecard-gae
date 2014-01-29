@@ -4,13 +4,14 @@ import logging
 import tap
 
 from google.appengine.ext import ndb
-from js.angular import angular
-from js.bootstrap import bootstrap
 import webapp2
 
 from main_api.v1 import api
 from main_api.v1 import user as api_user
 import main_model as model
+
+angular = "js.angular.angular"
+bootstrap = "js.bootstrap.bootstrap"
 
 class BaseHandler(tap.RequestHandler):
   i18n = True
