@@ -7,6 +7,7 @@ from protorpc import (
   message_types,
 )
 import endpoints
+import tap
 import tap.endpoints
 
 import main_model as model
@@ -14,13 +15,13 @@ import main_model as model
 from api import api
 import message
 
-rate_limit = tap.endpoints.rate_limit(rate=50, size=50, key=tap.endpoints.get_user_id, tag="timecard:api")
+rate_limit = tap.endpoints.rate_limit(rate=50, size=50, key=tap.endpoints.get_user_id_or_ip, tag="timecard:api")
 
 class user(object):
   @staticmethod
   @ndb.tasklet
   def store(user):
-    key = ndb.Key(model.User, user.user_id())
+    key = model.User.gen_key(user.user_id())
     entity = yield key.get_async()
     if entity is None:
       entity = model.User(key=key)
@@ -36,7 +37,7 @@ class Me(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def get(self, _request):
-    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
+    user_key = model.User.gen_key(tap.endpoints.get_user_id())
     entity = yield user_key.get_async()
     if entity is None:
       raise endpoints.NotFoundException()
@@ -51,7 +52,7 @@ class Me(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def create(self, request):
-    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
+    user_key = model.User.gen_key(tap.endpoints.get_user_id())
     entity = yield user_key.get_async()
     if entity is not None:
       raise endpoints.ForbiddenException()
@@ -75,7 +76,7 @@ class Me(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def update(self, request):
-    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
+    user_key = model.User.gen_key(tap.endpoints.get_user_id())
     entity = yield user_key.get_async()
     if entity is None:
       raise endpoints.BadRequestException()
@@ -92,6 +93,26 @@ class Me(tap.endpoints.CRUDService):
       language  = entity.language,
     ))
 
+  @endpoints.method(message.UserReceiveDelete, message_types.VoidMessage)
+  @ndb.toplevel
+  @rate_limit
+  def delete(self, request):
+    user_id = tap.endpoints.get_user_id()
+    if tap.base62_decode(request.key) != user_id:
+      raise endpoints.BadRequestException()
+    user_key = model.User.gen_key(user_id)
+    entity = yield user_key.get_async()
+    if entity is None:
+      raise endpoints.NotFoundException()
+    if request.name != entity.name:
+      raise endpoints.BadRequestException(entity.name)
+
+    future = entity.key.delete_async()
+    if future.check_success():
+      raise future.get_exception()
+    deferred.defer(UserSearchIndex.delete, tap.base62_encode(user_id))
+    raise ndb.Return(message_types.VoidMessage())
+
 @api.api_class(resource_name="user", path="user")
 class User(tap.endpoints.CRUDService):
 
@@ -101,13 +122,15 @@ class User(tap.endpoints.CRUDService):
   def list(self, request):
     key_list = list()
     for user_receive_list in request.items:
-      key_list.append(ndb.Key(model.User, user_receive_list.key))
+      key_list.append(model.User.gen_key(user_receive_list.key))
     if key_list:
       entities = yield ndb.get_multi_async(key_list)
     else:
       raise endpoints.BadRequestException("Bad query")
     items = list()
     for user in entities:
+      if user is None:
+        continue
       items.append(message.UserSend(key=user.user_id,
                                     name=user.name,
                                     language=user.language))
@@ -163,3 +186,7 @@ class UserSearchIndex(object):
       doc_id = doc_id,
       fields = [search.TextField(name="a", value=name)],
     ))
+
+  @classmethod
+  def delete(cls, doc_id):
+    cls.search_index.delete(doc_id)

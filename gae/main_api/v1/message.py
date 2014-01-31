@@ -5,6 +5,10 @@ class UserReceive(messages.Message):
   name        = messages.StringField (1, required=True)
   language    = messages.StringField (2, required=True)
 
+class UserReceiveDelete(messages.Message):
+  key         = messages.StringField (1, required=True)
+  name        = messages.StringField (2, required=True)
+
 class UserSend(messages.Message):
   key         = messages.StringField (1, required=True)
   name        = messages.StringField (2, required=True)
@@ -92,7 +96,7 @@ class IssueSend(messages.Message):
   key           = messages.StringField       (5, required=True)
   closed_on     = message_types.DateTimeField(6, required=False)
   will_start_at = message_types.DateTimeField(7, required=True)
-  author        = messages.IntegerField      (8, required=True)
+  author        = messages.StringField       (8, required=True)
 
 class IssueSendCollection(messages.Message):
   items         = messages.MessageField(IssueSend, 1, repeated=True)

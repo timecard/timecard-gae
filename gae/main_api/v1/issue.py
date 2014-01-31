@@ -32,7 +32,7 @@ class Issue(tap.endpoints.CRUDService):
       user = None
       project = yield project_key.get_async()
     else:
-      user_key = ndb.Key(model.User, user_id)
+      user_key = model.User.gen_key(user_id)
       user, project = yield ndb.get_multi_async((user_key, project_key))
 
     if not project:
@@ -58,7 +58,7 @@ class Issue(tap.endpoints.CRUDService):
         subject       = issue.subject      ,
         description   = issue.description  ,
         assignee      = issue.assignee.integer_id() if issue.assignee else None     ,
-        key           = issue.key.string_id()          ,
+        key           = issue.key.string_id().decode("utf-8")          ,
         closed_on     = issue.closed_on    ,
         will_start_at = issue.will_start_at,
         author        = issue.author_key.integer_id()       ,
@@ -82,7 +82,7 @@ class Issue(tap.endpoints.CRUDService):
       user = None
       project = yield project_key.get_async()
     else:
-      user_key = ndb.Key(model.User, user_id)
+      user_key = model.User.gen_key(user_id)
       user, project = yield ndb.get_multi_async((user_key, project_key))
 
     if not project:
@@ -118,7 +118,7 @@ class Issue(tap.endpoints.CRUDService):
         subject       = issue.subject      ,
         description   = issue.description  ,
         assignee      = issue.assignee.integer_id() if issue.assignee else None     ,
-        key           = issue.key.string_id()          ,
+        key           = issue.key.string_id().decode("utf-8")          ,
         closed_on     = issue.closed_on    ,
         will_start_at = issue.will_start_at,
         author        = issue.author_key.integer_id()       ,
@@ -138,7 +138,7 @@ class Issue(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def create(self, request):
-    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
+    user_key = model.User.gen_key(tap.endpoints.get_user_id())
     project_key = ndb.Key(model.Project, int(request.project))
     if request.assignee is not None:
       assignee_key = ndb.Key(model.User, request.assignee)
@@ -177,7 +177,7 @@ class Issue(tap.endpoints.CRUDService):
       subject       = issue.subject      ,
       description   = issue.description  ,
       assignee      = issue.assignee.integer_id() if issue.assignee else None     ,
-      key           = issue.key.string_id(),
+      key           = issue.key.string_id().decode("utf-8"),
       closed_on     = issue.closed_on    ,
       will_start_at = issue.will_start_at,
       author        = issue.author_key.integer_id()       ,
@@ -212,17 +212,17 @@ class Issue(tap.endpoints.CRUDService):
       subject       = issue.subject      ,
       description   = issue.description  ,
       assignee      = issue.assignee.integer_id() if issue.assignee else None     ,
-      key           = issue.key.string_id(),
+      key           = issue.key.string_id().decode("utf-8"),
       closed_on     = issue.closed_on    ,
       will_start_at = issue.will_start_at,
-      author        = issue.author_key.integer_id()       ,
+      author        = issue.author_key.string_id()       ,
     ))
 
   @endpoints.method(message.IssueReceiveToggle, message.IssueSend)
   @ndb.toplevel
   @rate_limit
   def close(self, request):
-    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
+    user_key = model.User.gen_key(tap.endpoints.get_user_id())
     issue_key = ndb.Key(model.Issue, request.key)
     project_key, _will_start_at, _user_id, _name = model.Issue.parse_key(issue_key)
     user, issue, project = yield ndb.get_multi_async((user_key, issue_key, project_key))
@@ -242,17 +242,17 @@ class Issue(tap.endpoints.CRUDService):
       subject       = issue.subject      ,
       description   = issue.description  ,
       assignee      = issue.assignee.integer_id() if issue.assignee else None     ,
-      key           = issue.key.string_id(),
+      key           = issue.key.string_id().decode("utf-8"),
       closed_on     = issue.closed_on    ,
       will_start_at = issue.will_start_at,
-      author        = issue.author_key.integer_id()       ,
+      author        = issue.author_key.string_id()       ,
     ))
 
   @endpoints.method(message.IssueReceiveToggle, message.IssueSend)
   @ndb.toplevel
   @rate_limit
   def reopen(self, request):
-    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
+    user_key = model.User.gen_key(tap.endpoints.get_user_id())
     issue_key = ndb.Key(model.Issue, request.key)
     project_key, _will_start_at, _user_id, _name = model.Issue.parse_key(issue_key)
     user, issue, project = yield ndb.get_multi_async((user_key, issue_key, project_key))
@@ -272,10 +272,10 @@ class Issue(tap.endpoints.CRUDService):
       subject       = issue.subject      ,
       description   = issue.description  ,
       assignee      = issue.assignee.integer_id() if issue.assignee else None     ,
-      key           = issue.key.string_id(),
+      key           = issue.key.string_id().decode("utf-8"),
       closed_on     = issue.closed_on    ,
       will_start_at = issue.will_start_at,
-      author        = issue.author_key.integer_id()       ,
+      author        = issue.author_key.string_id()       ,
     ))
 
 class IssueSearchIndex(object):

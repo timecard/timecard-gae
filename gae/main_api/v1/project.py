@@ -9,6 +9,7 @@ from google.appengine.ext import (
 from protorpc import (
   message_types,
 )
+from webapp2_extras import security
 import endpoints
 import tap.endpoints
 
@@ -17,7 +18,7 @@ import main_model as model
 from api import api
 import message
 
-rate_limit = tap.endpoints.rate_limit(rate=50, size=50, key=tap.endpoints.get_user_id, tag="timecard:api")
+rate_limit = tap.endpoints.rate_limit(rate=50, size=50, key=tap.endpoints.get_user_id_or_ip, tag="timecard:api")
 
 @api.api_class(resource_name="project", path="project")
 class Project(tap.endpoints.CRUDService):
@@ -28,8 +29,12 @@ class Project(tap.endpoints.CRUDService):
   def list(self, request):
     import tap
 
-    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
-    user = yield user_key.get_async()
+    user_id = tap.endpoints.get_user_id(raises=False)
+    if user_id:
+      user_key = model.User.gen_key(user_id)
+      user = yield user_key.get_async()
+    else:
+      user = None
 
     if user:
       query = model.Project.query(ndb.OR(model.Project.is_public == True,
@@ -115,7 +120,7 @@ class Project(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def create(self, request):
-    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
+    user_key = model.User.gen_key(tap.endpoints.get_user_id())
     user = yield user_key.get_async()
     if user is None:
       raise endpoints.UnauthorizedException()
@@ -149,7 +154,7 @@ class Project(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def update(self, request):
-    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
+    user_key = model.User.gen_key(tap.endpoints.get_user_id())
     project_key = ndb.Key(model.Project, request.key)
     user, project = yield ndb.get_multi_async((user_key, project_key))
 
@@ -224,5 +229,5 @@ class ProjectSearchIndex(object):
     ))
 
   @classmethod
-  def delete(cls, key):
-    cls.search_index.delete(key)
+  def delete(cls, doc_id):
+    cls.search_index.delete(doc_id)

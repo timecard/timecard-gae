@@ -14,11 +14,8 @@ class ModelMixinBase(object):
 
 class User(ModelMixinBase):
   @classmethod
-  def gen_key(cls, user):
-    argv = (
-      user.user_id(),
-    )
-    return ndb.Key("User", ":".join(argv))
+  def gen_key(cls, user_id):
+    return ndb.Key("User", user_id)
 
   @classmethod
   def parse_key(cls, key):
@@ -45,35 +42,35 @@ class Issue(ModelMixinBase):
   @classmethod
   def parse_key(cls, key):
     import tap
-    project_id, will_start_at, user_id, name = key.string_id().split("/", 3)
+    project_id, will_start_at, author_id, author_name = key.string_id().split("/", 3)
     result = (
       ndb.Key("Project", tap.base62_decode(project_id)),
       datetime.fromtimestamp(tap.base62_decode(will_start_at)),
-      user_id,
-      name,
+      author_id,
+      author_name,
     )
     return result
 
   @property
   def project_key(self):
-    project_key, _will_start_at, _user_id, _name = self.parsed_key
+    project_key, _will_start_at, _author_id, _author_name = self.parsed_key
     return project_key
 
   @property
   def will_start_at(self):
-    _project_key, will_start_at, _user_id, _name = self.parsed_key
+    _project_key, will_start_at, _author_id, _author_name = self.parsed_key
     return will_start_at
 
   @property
   def author_key(self):
-    _project_key, _will_start_at, user_id, _name = self.parsed_key
-    author_key = ndb.Key("User", int(user_id))
+    _project_key, _will_start_at, author_id, _author_name = self.parsed_key
+    author_key = ndb.Key("User", author_id)
     return author_key
 
   @property
   def author_name(self):
-    _project_key, _will_start_at, _user_id, name = self.parsed_key
-    return name
+    _project_key, _will_start_at, _author_id, author_name = self.parsed_key
+    return author_name
 
 class ActiveWorkLoad(ModelMixinBase):
   @classmethod

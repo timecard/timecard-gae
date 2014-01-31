@@ -38,7 +38,7 @@ class Comment(tap.endpoints.CRUDService):
       user = None
       project = yield project_key.get_async()
     else:
-      user_key = ndb.Key(model.User, user_id)
+      user_key = model.User.gen_key(user_id)
       user, project = yield ndb.get_multi_async((user_key, project_key))
 
     if not project:
@@ -77,7 +77,7 @@ class Comment(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def create(self, request):
-    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
+    user_key = model.User.gen_key(tap.endpoints.get_user_id())
     issue_key = ndb.Key(model.Issue, request.issue)
     project_key, _will_start_at, _user_id, _name = model.Issue.parse_key(issue_key)
     user, issue, project = yield ndb.get_multi_async((user_key, issue_key, project_key))
@@ -113,7 +113,7 @@ class Comment(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def update(self, request):
-    user_key = ndb.Key(model.User, tap.endpoints.get_user_id())
+    user_key = model.User.gen_key(tap.endpoints.get_user_id())
     comment_key = ndb.Key(model.Comment, request.key)
     user, comment = yield ndb.get_multi_async((user_key, comment_key))
 
