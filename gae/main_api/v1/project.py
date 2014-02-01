@@ -94,6 +94,8 @@ class Project(tap.endpoints.CRUDService):
 
     items = list()
     for project in entities:
+      if project is None:
+        continue
       items.append(message.ProjectSend(
         key         = project.key.integer_id(),
         name        = project.name       ,
@@ -172,15 +174,23 @@ class Project(tap.endpoints.CRUDService):
     else:
       will_un_public = False
 
-    project.name        = request.name
-    project.description = request.description
-    project.is_public   = request.is_public
-    project.closed      = request.closed
-    project.archive     = request.archive
-    project.admin       = request.admin
-    project.member      = request.member
-    project.language    = request.language
-    _project_key = yield project.put_async()
+    modified = False
+    for field in request.all_fields():
+      name = field.name
+      value = request.__getattribute__(name)
+      if value is None:
+        continue
+      if name == "key":
+        continue
+      project.__setattr__(name, value)
+      modified = True
+    else:
+      if modified is False:
+        raise endpoints.BadRequestException()
+
+    future = project.put_async()
+    if future.check_success():
+      raise future.get_exception()
 
     ProjectSearchIndex.update(project, will_un_public)
 
@@ -191,10 +201,69 @@ class Project(tap.endpoints.CRUDService):
       is_public   = project.is_public  ,
       closed      = project.closed     ,
       archive     = project.archive    ,
-      admin       = project.admin      ,
-      member      = project.member     ,
+      admin       = [key.string_id() for key in project.admin],
+      member      = [key.string_id() for key in project.member],
       language    = project.language      ,
     ))
+
+  @endpoints.method(message.ProjectReceiveDelete, message_types.VoidMessage)
+  @ndb.toplevel
+  @rate_limit
+  def delete(self, request):
+    user_key = model.User.gen_key(tap.endpoints.get_user_id())
+    project_key = ndb.Key(model.Project, request.key)
+    user, project = yield ndb.get_multi_async((user_key, project_key))
+
+    if not user:
+      raise endpoints.UnauthorizedException()
+    if not project:
+      raise endpoints.NotFoundException()
+    if not user.key in project.admin:
+      raise endpoints.ForbiddenException()
+
+    if not security.compare_hashes(request.name, project.name):
+      raise endpoints.BadRequestException()
+
+    if project.is_public:
+      ProjectSearchIndex.update(project, will_un_public=False)
+
+    ProjectDelete.run(project.key)
+
+    raise ndb.Return(message_types.VoidMessage())
+
+class ProjectDelete(object):
+  @classmethod
+  def run(cls, project_key):
+    project_key.delete_async()
+    key_id = tap.base62_encode(project_key.integer_id())
+    model_names = [
+      "Comment",
+      "Issue",
+      "WorkLoad",
+    ]
+    for model_name in model_names:
+      deferred.defer(cls._run, key_id, model_name)
+
+  @classmethod
+  @ndb.toplevel
+  @ndb.synctasklet
+  def _run(cls, key_id, model_name):
+    try:
+      Model = model.__dict__[model_name]
+    except KeyError as e:
+      raise deferred.PermanentTaskFailure(e)
+    key_start = ndb.Key(Model, key_id)
+    key_end   = ndb.Key(Model, "{0}/\xff".format(key_id))
+    query = Model.query(ndb.AND(Model.key >= key_start,
+                                Model.key <= key_end))
+    cursor = None
+    while True:
+      results, cursor, more = yield query.fetch_page_async(page_size=100,
+                                                           keys_only=True,
+                                                           start_cursor=cursor)
+      ndb.delete_multi_async(results)
+      if not more:
+        return
 
 class ProjectSearchIndex(object):
 

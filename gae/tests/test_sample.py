@@ -26,13 +26,11 @@ class AppTest(tests.util.TestCase):
     }, status=404)
     self.app.post_json(self.endpoints_uri("Me.create"), {
       "name": "me",
-      "language": "en",
     })
     response = self.app.post_json(self.endpoints_uri("Me.get"))
     assert response.json == {u'key': u'1C', u'language': u'en', u'name': u'me'}
     response = self.app.post_json(self.endpoints_uri("Me.update"), {
       "name": u"日本語",
-      "language": "ja",
     })
     assert response.json == {u'key': u'1C', u'language': u'ja', u'name': u'日本語'}
     self.execute_tasks("default")
@@ -60,6 +58,22 @@ class AppTest(tests.util.TestCase):
       "key": "1C",
       "name": "me",
     }, status=400)
+    project = self.app.post_json(self.endpoints_uri("Project.create"), {
+      "name": u"日本語",
+    }).json
+    assert ndb.Key(model.Project, int(project["key"])).get()
+    response = self.app.post_json(self.endpoints_uri("Project.list"))
+    assert len(response.json["items"]) == 1
+    self.app.post_json(self.endpoints_uri("Me.delete"), {
+      "key": "1C",
+      "name": u"日本語",
+    }, status=403)
+    response = self.app.post_json(self.endpoints_uri("Project.delete"), {
+      "key": project["key"],
+      "name": project["name"],
+    })
+    self.execute_tasks("default")
+    assert not ndb.Key(model.Project, int(project["key"])).get()
     self.app.post_json(self.endpoints_uri("Me.delete"), {
       "key": "1C",
       "name": u"日本語",
@@ -68,4 +82,58 @@ class AppTest(tests.util.TestCase):
       "query": u"日本語",
     })
     # case: search indexは存在するが、userは居ない
+    assert response.json == {}
+
+  def test_project(self):
+    self.endpoints_via_oauth(email="me@localhost", _user_id=100)
+    self.app.post_json(self.endpoints_uri("Project.create"), status=401)
+    response = self.app.post_json(self.endpoints_uri("Project.list"))
+    assert response.json == {}
+    response = self.app.post_json(self.endpoints_uri("Project.search"), {
+      "query": "test",
+    })
+    assert response.json == {}
+    response = self.app.post_json(self.endpoints_uri("Me.create"), {
+      "name": u"日本語",
+      "language": "ja",
+    })
+    project = self.app.post_json(self.endpoints_uri("Project.create"), {
+      "name": "en",
+    }).json
+    assert project == {u'admin': [u'1C'],
+                       u'archive': False,
+                       u'closed': False,
+                       u'description': u'',
+                       u'is_public': True,
+                       u'key': u'1',
+                       u'language': u'ja',
+                       u'member': [u'1C'],
+                       u'name': u'en'}
+    self.app.post_json(self.endpoints_uri("Project.update"), {
+      "key": project["key"],
+    }, status=400)
+    project = self.app.post_json(self.endpoints_uri("Project.update"), {
+      "key": project["key"],
+      "name": u"日本語",
+      "language": "en",
+    }).json
+    assert project['name'] == u'\u65e5\u672c\u8a9e'
+    response = self.app.post_json(self.endpoints_uri("Project.list"))
+    assert len(response.json["items"]) == 1
+    self.execute_tasks("default")
+    response = self.app.post_json(self.endpoints_uri("Project.search"), {
+      "query": u"日本語",
+    })
+    assert len(response.json["items"]) == 1
+    response = self.app.post_json(self.endpoints_uri("Project.delete"), {
+      "key": project["key"],
+    }, status=400)
+    response = self.app.post_json(self.endpoints_uri("Project.delete"), {
+      "key": project["key"],
+      "name": u"日本語",
+    })
+    assert response.json == {}
+    response = self.app.post_json(self.endpoints_uri("Project.search"), {
+      "query": u"日本語",
+    })
     assert response.json == {}

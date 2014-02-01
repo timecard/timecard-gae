@@ -1,9 +1,13 @@
 from protorpc import messages, message_types
 
 
-class UserReceive(messages.Message):
+class UserReceiveNew(messages.Message):
   name        = messages.StringField (1, required=True)
-  language    = messages.StringField (2, required=True)
+  language    = messages.StringField (2, required=False)
+
+class UserReceive(messages.Message):
+  name        = messages.StringField (1, required=False)
+  language    = messages.StringField (2, required=False)
 
 class UserReceiveDelete(messages.Message):
   key         = messages.StringField (1, required=True)
@@ -43,10 +47,14 @@ class ProjectReceiveSearch(messages.Message):
 
 class ProjectReceive(messages.Message):
   key         = messages.IntegerField(1, required=True)
+  name        = messages.StringField (2, required=False)
+  description = messages.StringField (3, required=False)
+  is_public   = messages.BooleanField(4, required=False)
+  language    = messages.StringField (5, required=False)
+
+class ProjectReceiveDelete(messages.Message):
+  key         = messages.IntegerField(1, required=True)
   name        = messages.StringField (2, required=True)
-  description = messages.StringField (3, default="")
-  is_public   = messages.BooleanField(4, default=True)
-  language    = messages.StringField (5, required=True)
 
 class ProjectSend(messages.Message):
   key         = messages.IntegerField(1, required=True)
@@ -81,8 +89,8 @@ class IssueReceiveSearch(messages.Message):
 
 class IssueReceive(messages.Message):
   key           = messages.StringField       (1, required=True)
-  subject       = messages.StringField       (2, required=True)
-  description   = messages.StringField       (3, default="")
+  subject       = messages.StringField       (2, required=False)
+  description   = messages.StringField       (3, required=False)
   assignee      = messages.StringField       (4, required=False)
 
 class IssueReceiveToggle(messages.Message):
