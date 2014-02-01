@@ -133,7 +133,9 @@ class Project(tap.endpoints.CRUDService):
       member      = (user.key,)        ,
       language    = user.language      ,
     )
-    _project_key = yield project.put_async()
+    future = project.put_async()
+    if future.check_success():
+      raise future.get_exception()
 
     if project.is_public:
       ProjectSearchIndex.update(project, will_un_public=False)
