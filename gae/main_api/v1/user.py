@@ -98,19 +98,24 @@ class Me(tap.endpoints.CRUDService):
   @rate_limit
   def delete(self, request):
     user_id = tap.endpoints.get_user_id()
-    if tap.base62_decode(request.key) != user_id:
+    if request.key != user_id:
       raise endpoints.BadRequestException()
     user_key = model.User.gen_key(user_id)
     entity = yield user_key.get_async()
     if entity is None:
       raise endpoints.NotFoundException()
     if request.name != entity.name:
-      raise endpoints.BadRequestException(entity.name)
+      raise endpoints.BadRequestException()
+
+    query = model.Project.query(model.Project.admin == user_key)
+    result = yield query.get_async(keys_only=True)
+    if result:
+      raise endpoints.ForbiddenException()
 
     future = entity.key.delete_async()
     if future.check_success():
       raise future.get_exception()
-    deferred.defer(UserSearchIndex.delete, tap.base62_encode(user_id))
+    deferred.defer(UserSearchIndex.delete, user_id)
     raise ndb.Return(message_types.VoidMessage())
 
 @api.api_class(resource_name="user", path="user")
@@ -160,6 +165,8 @@ class User(tap.endpoints.CRUDService):
     if key_list:
       entities = yield ndb.get_multi_async(key_list)
       for user in entities:
+        if user is None:
+          continue
         items.append(message.UserSend(key=user.user_id,
                                       name=user.name,
                                       language=user.language))

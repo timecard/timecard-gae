@@ -3,9 +3,11 @@
 import tests.util
 
 from google.appengine.api import taskqueue
+from google.appengine.ext import ndb
 import endpoints
 
 import main_api.v1
+import main_model as model
 
 class AppTest(tests.util.TestCase):
   application = main_api.v1.api
@@ -33,10 +35,15 @@ class AppTest(tests.util.TestCase):
       "language": "ja",
     })
     assert response.json == {u'key': u'1C', u'language': u'ja', u'name': u'日本語'}
+    self.execute_tasks("default")
     response = self.app.post_json(self.endpoints_uri("User.search"), {
       "query": "none",
     })
     assert response.json == {}
+    response = self.app.post_json(self.endpoints_uri("User.search"), {
+      "query": u"日本語",
+    })
+    assert response.json == {u'items': [{u'key': u'1C', u'language': u'ja', u'name': u'日本語'}]}
     response = self.app.post_json(self.endpoints_uri("User.list"), {
       "items": [{"key": "none"}],
     })
@@ -57,3 +64,8 @@ class AppTest(tests.util.TestCase):
       "key": "1C",
       "name": u"日本語",
     })
+    response = self.app.post_json(self.endpoints_uri("User.search"), {
+      "query": u"日本語",
+    })
+    # case: search indexは存在するが、userは居ない
+    assert response.json == {}
