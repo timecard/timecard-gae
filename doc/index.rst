@@ -22,10 +22,6 @@ Contents:
   :members:
   :undoc-members:
 
-.. automodule:: main_api
-  :members:
-  :undoc-members:
-
 .. automodule:: main_app
   :members:
   :undoc-members:

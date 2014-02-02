@@ -22,14 +22,10 @@ import os
 os.chdir("../gae")
 try:
   sys.path.insert(0, os.path.abspath(os.environ["GAE_HOME"]))
-  sys.path.insert(0, os.path.abspath('.'))
-  os.chdir("tap")
-  try:
-    sys.path.insert(0, os.path.abspath('.'))
-    os.environ["SITE_PACKAGES"] = os.path.abspath("../site-packages")
-    import shell
-  finally:
-    os.chdir("../")
+  sys.path.append(os.path.abspath(os.curdir))
+  sys.path.append(os.path.abspath("tap"))
+  os.environ["SITE_PACKAGES"] = os.path.abspath("../site-packages")
+  import shell
 finally:
   os.chdir("../doc")
 
