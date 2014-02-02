@@ -8,13 +8,15 @@ LANGUAGE_CHOICES = (
   ("en", u"English"),
   ("ja", u"日本語"),
 )
+LANGUAGE_CHOICES_VALUES = [value for value, label in LANGUAGE_CHOICES]
+LANGUAGE_DEFAULT = LANGUAGE_CHOICES_VALUES[0]
 
 class User(ndb.Model, model_mixin.User):
   #key
   #user_id = ndb.StringProperty(indexed=True, required=True)
 
   name = ndb.StringProperty(indexed=False)
-  language = ndb.StringProperty(indexed=False, choices=[value for value, label in LANGUAGE_CHOICES], default=LANGUAGE_CHOICES[0][0])
+  language = ndb.StringProperty(indexed=False, choices=LANGUAGE_CHOICES_VALUES, default=LANGUAGE_DEFAULT)
   #not_do_today = list of Issue
 
 class Project(ndb.Model):

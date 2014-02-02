@@ -60,11 +60,23 @@ class Me(tap.endpoints.CRUDService):
     entity = model.User(
       key       = user_key,
       name      = request.name,
-      language  = request.language or "en",
     )
-    future = entity.put_async()
-    if future.check_success():
-      raise future.get_exception()
+
+    language = request.language
+    if language is None:
+      accept_language = self.request_state.headers.get("Accept-Language")
+      if accept_language:
+        for lang in [locale.split(";", 1)[0].replace("-", "_") for locale in accept_language.split(",")]:
+          if lang in model.LANGUAGE_CHOICES_VALUES:
+            language = lang
+    if language is not None:
+      entity.language = language
+
+    try:
+      future = entity.put_async()
+      future.check_success()
+    except Exception as e:
+      raise endpoints.BadRequestException(e.message)
     UserSearchIndex.update(entity)
     raise ndb.Return(message.UserSend(
       key       = entity.key.string_id(),
