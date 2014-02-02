@@ -6,8 +6,8 @@ from google.appengine.api import taskqueue
 from google.appengine.ext import ndb
 import endpoints
 
+from main_api.v1 import model
 import main_api.v1
-import main_model as model
 
 class AppTest(tests.util.TestCase):
   application = main_api.v1.api

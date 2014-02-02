@@ -8,7 +8,7 @@ import webapp2
 
 from main_api.v1 import api
 from main_api.v1 import user as api_user
-import main_model as model
+from main_api.v1 import model
 
 angular = "js.angular.angular"
 bootstrap = "js.bootstrap.bootstrap"

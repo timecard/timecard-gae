@@ -10,10 +10,9 @@ import endpoints
 import tap
 import tap.endpoints
 
-import main_model as model
-
 from api import api
 import message
+import model
 
 rate_limit = tap.endpoints.rate_limit(rate=50, size=50, key=tap.endpoints.get_user_id_or_ip, tag="timecard:api")
 

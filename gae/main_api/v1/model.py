@@ -2,7 +2,7 @@
 
 from google.appengine.ext import ndb
 
-import main_model_mixin as model_mixin
+import model_mixin
 
 LANGUAGE_CHOICES = (
   ("en", u"English"),

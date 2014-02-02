@@ -14,11 +14,11 @@ Contents:
 .. contents::
   :local:
 
-.. automodule:: main_model
+.. automodule:: main_api.v1.model
   :members:
   :undoc-members:
 
-.. automodule:: main_model_mixin
+.. automodule:: main_api.v1.model_mixin
   :members:
   :undoc-members:
 
