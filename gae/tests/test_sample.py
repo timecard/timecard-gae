@@ -32,7 +32,7 @@ class AppTest(tests.util.TestCase):
     response = self.app.post_json(self.endpoints_uri("Me.update"), {
       "name": u"日本語",
     })
-    assert response.json == {u'key': u'1C', u'language': u'ja', u'name': u'日本語'}
+    assert response.json == {u'key': u'1C', u'language': u'en', u'name': u'日本語'}
     self.execute_tasks("default")
     response = self.app.post_json(self.endpoints_uri("User.search"), {
       "query": "none",
@@ -41,7 +41,7 @@ class AppTest(tests.util.TestCase):
     response = self.app.post_json(self.endpoints_uri("User.search"), {
       "query": u"日本語",
     })
-    assert response.json == {u'items': [{u'key': u'1C', u'language': u'ja', u'name': u'日本語'}]}
+    assert response.json == {u'items': [{u'key': u'1C', u'language': u'en', u'name': u'日本語'}]}
     response = self.app.post_json(self.endpoints_uri("User.list"), {
       "items": [{"key": "none"}],
     })
@@ -49,7 +49,7 @@ class AppTest(tests.util.TestCase):
     response = self.app.post_json(self.endpoints_uri("User.list"), {
       "items": [{"key": "1C"}],
     })
-    assert response.json == {u'items': [{u'key': u'1C', u'language': u'ja', u'name': u'日本語'}]}
+    assert response.json == {u'items': [{u'key': u'1C', u'language': u'en', u'name': u'日本語'}]}
     self.app.post_json(self.endpoints_uri("Me.delete"), {
       "key": "100",
       "name": "me",
@@ -68,6 +68,10 @@ class AppTest(tests.util.TestCase):
       "key": "1C",
       "name": u"日本語",
     }, status=403)
+    response = self.app.post_json(self.endpoints_uri("Project.update"), {
+      "key": project["key"],
+      "closed": True,
+    })
     response = self.app.post_json(self.endpoints_uri("Project.delete"), {
       "key": project["key"],
       "name": project["name"],
@@ -101,7 +105,6 @@ class AppTest(tests.util.TestCase):
       "name": "en",
     }).json
     assert project == {u'admin': [u'1C'],
-                       u'archive': False,
                        u'closed': False,
                        u'description': u'',
                        u'is_public': True,
@@ -116,6 +119,7 @@ class AppTest(tests.util.TestCase):
       "key": project["key"],
       "name": u"日本語",
       "language": "en",
+      "closed": True,
     }).json
     assert project['name'] == u'\u65e5\u672c\u8a9e'
     response = self.app.post_json(self.endpoints_uri("Project.list"))
@@ -137,3 +141,51 @@ class AppTest(tests.util.TestCase):
       "query": u"日本語",
     })
     assert response.json == {}
+
+  def test_project_admin(self):
+    self.endpoints_via_oauth(email="me@localhost", _user_id=100)
+    self.app.post_json(self.endpoints_uri("Me.create"), {
+      "name": u"日本語",
+    })
+    self.endpoints_via_oauth(email="me@localhost", _user_id=200)
+    self.app.post_json(self.endpoints_uri("Me.create"), {
+      "name": u"日本語",
+    })
+    project = self.app.post_json(self.endpoints_uri("Project.create"), {
+      "name": u"日本語",
+    }).json
+    self.app.post_json(self.endpoints_uri("Project.update"), {
+      "key": project["key"],
+      "admin": project["admin"] + ["3e"],
+    }, status=400)
+    self.app.post_json(self.endpoints_uri("Project.update"), {
+      "key": project["key"],
+      "admin": project["admin"] + ["100"],
+    }, status=400)
+    self.app.post_json(self.endpoints_uri("Project.update"), {
+      "key": project["key"],
+      "admin": project["admin"] + ["100"],
+      "member": project["member"] + ["100"],
+    }, status=400)
+    self.app.post_json(self.endpoints_uri("Project.update"), {
+      "key": project["key"],
+      "admin": project["admin"] + ["3e"],
+      "member": project["member"] + ["3e"],
+    }, status=400)
+    self.app.post_json(self.endpoints_uri("Project.update"), {
+      "key": project["key"],
+      "admin": project["admin"] + ["1C"],
+      "member": project["member"] + ["1C"],
+    })
+    self.app.post_json(self.endpoints_uri("Project.delete"), {
+      "key": project["key"],
+      "name": u"日本語",
+    }, status=400)
+    self.app.post_json(self.endpoints_uri("Project.update"), {
+      "key": project["key"],
+      "closed": True,
+    })
+    self.app.post_json(self.endpoints_uri("Project.delete"), {
+      "key": project["key"],
+      "name": u"日本語",
+    })

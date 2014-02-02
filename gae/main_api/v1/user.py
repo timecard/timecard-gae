@@ -60,7 +60,7 @@ class Me(tap.endpoints.CRUDService):
     entity = model.User(
       key       = user_key,
       name      = request.name,
-      language  = request.language,
+      language  = request.language or "en",
     )
     future = entity.put_async()
     if future.check_success():
@@ -81,11 +81,24 @@ class Me(tap.endpoints.CRUDService):
     if entity is None:
       raise endpoints.BadRequestException()
 
-    entity.name = request.name
-    entity.language = request.language
-    future = entity.put_async()
-    if future.check_success():
-      raise future.get_exception()
+    modified = False
+    for field in request.all_fields():
+      name = field.name
+      if name == "key":
+        continue
+      value = request.__getattribute__(name)
+      if value is None:
+        continue
+      entity.__setattr__(name, value)
+      modified = True
+    else:
+      if modified is False:
+        raise endpoints.BadRequestException()
+    try:
+      future = entity.put_async()
+      future.check_success()
+    except Exception as e:
+      raise endpoints.BadRequestException(e.message)
     UserSearchIndex.update(entity)
     raise ndb.Return(message.UserSend(
       key       = entity.key.string_id(),

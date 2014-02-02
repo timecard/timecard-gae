@@ -50,7 +50,10 @@ class ProjectReceive(messages.Message):
   name        = messages.StringField (2, required=False)
   description = messages.StringField (3, required=False)
   is_public   = messages.BooleanField(4, required=False)
-  language    = messages.StringField (5, required=False)
+  closed      = messages.BooleanField(5, required=False)
+  admin       = messages.StringField (6, repeated=True)
+  member      = messages.StringField (7, repeated=True)
+  language    = messages.StringField (8, required=False)
 
 class ProjectReceiveDelete(messages.Message):
   key         = messages.IntegerField(1, required=True)
@@ -62,10 +65,9 @@ class ProjectSend(messages.Message):
   description = messages.StringField (3, required=True)
   is_public   = messages.BooleanField(4, required=True)
   closed      = messages.BooleanField(5, required=True)
-  archive     = messages.BooleanField(6, required=True)
-  admin       = messages.StringField (7, repeated=True)
-  member      = messages.StringField (8, repeated=True)
-  language    = messages.StringField (9, required=True)
+  admin       = messages.StringField (6, repeated=True)
+  member      = messages.StringField (7, repeated=True)
+  language    = messages.StringField (8, required=True)
 
 class ProjectSendCollection(messages.Message):
   items       = messages.MessageField(ProjectSend, 1, repeated=True)

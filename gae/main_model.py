@@ -24,7 +24,6 @@ class Project(ndb.Model):
   description = ndb.TextProperty(indexed=False, default="")
   is_public = ndb.BooleanProperty(indexed=True, default=True)
   closed = ndb.BooleanProperty(indexed=False, default=False)
-  archive = ndb.BooleanProperty(indexed=False, default=False)
   admin = ndb.KeyProperty(indexed=True, kind=User, repeated=True) #required=True
   member = ndb.KeyProperty(indexed=True, kind=User, repeated=True)
   language = ndb.StringProperty(indexed=False, choices=[value for value, label in LANGUAGE_CHOICES], default=LANGUAGE_CHOICES[0][0])

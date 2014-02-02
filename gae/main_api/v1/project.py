@@ -56,7 +56,6 @@ class Project(tap.endpoints.CRUDService):
         description = project.description,
         is_public   = project.is_public  ,
         closed      = project.closed     ,
-        archive     = project.archive    ,
         admin       = [key.string_id() for key in project.admin],
         member      = [key.string_id() for key in project.member],
         language    = project.language      ,
@@ -102,7 +101,6 @@ class Project(tap.endpoints.CRUDService):
         description = project.description,
         is_public   = project.is_public  ,
         closed      = project.closed     ,
-        archive     = project.archive    ,
         admin       = [key.string_id() for key in project.admin],
         member      = [key.string_id() for key in project.member],
         language    = project.language      ,
@@ -148,7 +146,6 @@ class Project(tap.endpoints.CRUDService):
       description = project.description,
       is_public   = project.is_public  ,
       closed      = project.closed     ,
-      archive     = project.archive    ,
       admin       = [key.string_id() for key in project.admin],
       member      = [key.string_id() for key in project.member],
       language    = project.language      ,
@@ -174,13 +171,30 @@ class Project(tap.endpoints.CRUDService):
     else:
       will_un_public = False
 
-    modified = False
+    user_id_list = list()
+    for name in ("admin", "member"):
+      value = request.__getattribute__(name)
+      if value == []:
+        continue
+      if len(value) != len(set(value)):
+        raise endpoints.BadRequestException()
+      project.__setattr__(name, [model.User.gen_key(user_id) for user_id in value])
+      user_id_list.extend(value)
+    if user_id_list:
+      user_key_list = [model.User.gen_key(user_id) for user_id in set(user_id_list)]
+      results = yield ndb.get_multi_async(user_key_list)
+      if None in results:
+        raise endpoints.BadRequestException()
+      modified = True
+    else:
+      modified = False
+
     for field in request.all_fields():
       name = field.name
+      if name in ("key", "admin", "member"):
+        continue
       value = request.__getattribute__(name)
       if value is None:
-        continue
-      if name == "key":
         continue
       project.__setattr__(name, value)
       modified = True
@@ -188,9 +202,13 @@ class Project(tap.endpoints.CRUDService):
       if modified is False:
         raise endpoints.BadRequestException()
 
-    future = project.put_async()
-    if future.check_success():
-      raise future.get_exception()
+    try:
+      future = project.put_async()
+      future.check_success()
+    except Exception as e:
+      import logging
+      logging.error(e)
+      raise endpoints.BadRequestException(e.message)
 
     ProjectSearchIndex.update(project, will_un_public)
 
@@ -200,7 +218,6 @@ class Project(tap.endpoints.CRUDService):
       description = project.description,
       is_public   = project.is_public  ,
       closed      = project.closed     ,
-      archive     = project.archive    ,
       admin       = [key.string_id() for key in project.admin],
       member      = [key.string_id() for key in project.member],
       language    = project.language      ,
@@ -221,6 +238,8 @@ class Project(tap.endpoints.CRUDService):
     if not user.key in project.admin:
       raise endpoints.ForbiddenException()
 
+    if not project.closed:
+      raise endpoints.BadRequestException()
     if not security.compare_hashes(request.name, project.name):
       raise endpoints.BadRequestException()
 
