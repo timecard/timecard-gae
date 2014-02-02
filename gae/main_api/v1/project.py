@@ -206,8 +206,6 @@ class Project(tap.endpoints.CRUDService):
       future = project.put_async()
       future.check_success()
     except Exception as e:
-      import logging
-      logging.error(e)
       raise endpoints.BadRequestException(e.message)
 
     ProjectSearchIndex.update(project, will_un_public)
