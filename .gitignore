@@ -1,3 +1,9 @@
+Gemfile.lock
+datastore.db
+doc
+node_modules
+tags
+
 syntax: glob
 
 *.css
@@ -15,9 +21,10 @@ syntax: glob
 .cache
 .coverage
 .sass-cache
-Gemfile.lock
-datastore.db
-doc/_*
+htmlcov
+
+syntax: regexp
+
 gae/oauth_config/*.py
 gae/site-packages/*.zip
 gae/site-packages/packages
@@ -31,11 +38,4 @@ gae/tap/templates/tap/mob/*.xhtml
 gae/templates/*.html
 gae/templates/*.py
 gae/templates/mob/*.xhtml
-htmlcov
-node_modules
-tags
-tests
-
-syntax: regexp
-
 gae/static/*.html
