@@ -51,9 +51,17 @@ def get_user_id_from_endpoints_service(raises=True):
 
   return user_id
 
-def get_user_id(_self=None):
-  user_id = get_user_id_from_endpoints_service()
-  return tap.base62_encode(int(user_id))
+def get_user_id(_self=None, raises=True):
+  user_id = get_user_id_from_endpoints_service(raises)
+  if user_id:
+    return tap.base62_encode(int(user_id))
+
+def get_user_id_or_ip(self=None):
+  user_id = get_user_id_from_endpoints_service(raises=False)
+  if user_id:
+    return int(user_id)
+  elif self:
+    return self.request_state.remote_address
 
 def rate_limit(rate, size, key=None, tag=None):
 
@@ -70,6 +78,8 @@ def rate_limit(rate, size, key=None, tag=None):
       if key is not None:
         if callable(key):
           token_buket_key = key(self)
+          if not isinstance(token_buket_key, basestring):
+            token_buket_key = str(token_buket_key)
       is_acceptable = yield token_bucket.is_acceptable_async(key=token_buket_key)
       if is_acceptable:
         raise ndb.Return(func(self, *argv, **kwargv))
