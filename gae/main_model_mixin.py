@@ -4,6 +4,7 @@ from datetime import datetime
 import time
 
 from google.appengine.ext import ndb
+import tap
 import tap.endpoints
 import webapp2
 
@@ -28,7 +29,6 @@ class User(ModelMixinBase):
 class Issue(ModelMixinBase):
   @classmethod
   def gen_key(cls, project_key, will_start_at, author_id, author_name):
-    import tap
     if not isinstance(will_start_at, str):
       will_start_at = tap.base62_encode(int(time.mktime(will_start_at.timetuple())))
     argv = (
@@ -41,7 +41,6 @@ class Issue(ModelMixinBase):
 
   @classmethod
   def parse_key(cls, key):
-    import tap
     project_id, will_start_at, author_id, author_name = key.string_id().split("/", 3)
     result = (
       ndb.Key("Project", tap.base62_decode(project_id)),
@@ -76,7 +75,6 @@ class ActiveWorkLoad(ModelMixinBase):
   @classmethod
   @ndb.synctasklet
   def gen_key(cls, project_key, issue_key, start_at, user_key, user_name):
-    import tap
     project, issue = yield ndb.get_multi_async((project_key, issue_key))
     project_id, will_start_at, author_id, author_name = issue.key.string_id().split("/", 3)
     start_at = tap.base62_encode(int(time.mktime(start_at.timetuple())))
@@ -98,7 +96,6 @@ class ActiveWorkLoad(ModelMixinBase):
 
   @classmethod
   def parse_key(cls, key):
-    import tap
     (
       user_id,
       project_id,
@@ -231,7 +228,6 @@ class WorkLoad(ModelMixinBase):
   @classmethod
   @ndb.synctasklet
   def gen_key(cls, project_key, issue_key, start_at, end_at):
-    import tap
     project, issue = yield ndb.get_multi_async((project_key, issue_key))
     project_id, will_start_at, user_id, user_name = issue.key.string_id().split("/", 3)
     start_at = tap.base62_encode(int(time.mktime(start_at.timetuple())))
@@ -252,7 +248,6 @@ class WorkLoad(ModelMixinBase):
 
   @classmethod
   def parse_key(cls, key):
-    import tap
     (
       project_id,
       will_start_at,
@@ -365,7 +360,6 @@ class Comment(ModelMixinBase):
   @classmethod
   @ndb.synctasklet
   def gen_key(cls, issue_key, time_at, author_key, author_name):
-    import tap
     project_id, will_start_at, user_id, name = issue_key.string_id().split("/", 3)
     argv = (
       project_id,
@@ -380,7 +374,6 @@ class Comment(ModelMixinBase):
 
   @classmethod
   def parse_key(cls, key):
-    import tap
     (
       project_id,
       will_start_at,

@@ -6,6 +6,7 @@ from protorpc import (
   message_types,
 )
 import endpoints
+import tap
 import tap.endpoints
 
 import main_model as model
@@ -22,7 +23,6 @@ class WorkLoad(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def list(self, request):
-    import tap
     project_key = ndb.Key(model.Project, request.project)
     workload_query_key = tap.base62_encode(project_key.integer_id())
 
@@ -195,7 +195,6 @@ class WorkLoad(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def finish(self, _request):
-    import tap
     user_key = model.User.gen_key(tap.endpoints.get_user_id())
     user = yield user_key.get_async()
 

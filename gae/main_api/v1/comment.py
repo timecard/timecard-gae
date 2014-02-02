@@ -3,6 +3,7 @@ from datetime import datetime
 from google.appengine.ext import ndb
 from protorpc import message_types
 import endpoints
+import tap
 import tap.endpoints
 
 import main_model as model
@@ -19,7 +20,6 @@ class Comment(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def list(self, request):
-    import tap
     if request.issue:
       if request.project:
         raise endpoints.BadRequestException()

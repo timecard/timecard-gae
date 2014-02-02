@@ -11,6 +11,7 @@ from protorpc import (
 )
 from webapp2_extras import security
 import endpoints
+import tap
 import tap.endpoints
 
 import main_model as model
@@ -27,8 +28,6 @@ class Project(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def list(self, request):
-    import tap
-
     user_id = tap.endpoints.get_user_id(raises=False)
     if user_id:
       user_key = model.User.gen_key(user_id)
@@ -69,7 +68,6 @@ class Project(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def search(self, request):
-    import tap
     if len(request.query.encode("utf-8")) < 3:
       raise endpoints.BadRequestException("Bad query")
 
@@ -288,7 +286,6 @@ class ProjectSearchIndex(object):
 
   @classmethod
   def update(cls, project, will_un_public):
-    import tap
     if project.is_public is False and will_un_public is False:
       return
     doc_id = tap.base62_encode(project.key.integer_id())

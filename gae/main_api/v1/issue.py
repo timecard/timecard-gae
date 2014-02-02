@@ -9,6 +9,7 @@ from protorpc import (
   message_types,
 )
 import endpoints
+import tap
 import tap.endpoints
 
 import main_model as model
@@ -25,7 +26,6 @@ class Issue(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def list(self, request):
-    import tap
     project_key = ndb.Key(model.Project, request.project)
     user_id = tap.endpoints.get_user_id(raises=False)
     if user_id is None:
@@ -72,7 +72,6 @@ class Issue(tap.endpoints.CRUDService):
   @ndb.toplevel
   @rate_limit
   def search(self, request):
-    import tap
     if len(request.query.encode("utf-8")) < 3:
       raise endpoints.BadRequestException("Bad query")
 
@@ -288,7 +287,6 @@ class IssueSearchIndex(object):
 
   @classmethod
   def update(cls, issue, project):
-    import tap
     doc_id = cls.doc_id(issue)
     if project.language == "ja":
       queue = "yahoo-japan-jlp-ma"
