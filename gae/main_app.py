@@ -6,8 +6,6 @@ import tap
 from google.appengine.ext import ndb
 import webapp2
 
-from main_api.v1 import api
-from main_api.v1 import user as api_user
 from main_api.v1 import model
 
 angular = "js.angular.angular"
