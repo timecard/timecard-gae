@@ -15,6 +15,7 @@ STATIC_ROOT_DIR_PATH=$(GAE_DIR)/static_root
 STATIC_ROOT_ZIP_PATH=$(STATIC_ROOT_DIR_PATH).zip
 STATIC_ROOT=$(wildcard $(STATIC_ROOT_DIR_PATH)/**/*)
 STATIC_ROOT_PATH=$(patsubst $(GAE_DIR)/%,%,$(STATIC_ROOT))
+DART_DIR_PATH=$(GAE_DIR)/dart
 JS_DIR=$(GAE_DIR)/static/js
 CSS_DIR=$(GAE_DIR)/static/css
 FANSTATIC_DIR=$(GAE_DIR)/static/lib
@@ -28,6 +29,7 @@ TESTACULAR_TARGET=$(GAE_DIR)/tests/test*.coffee
 VERSION_HTML=$(TEMPLATE_DIR_PATH)/version.html
 VERSION=$(shell git describe --always --dirty=+)
 LOCALES=
+PORT=8080
 test=
 
 .SUFFIXES: .haml .html
@@ -35,6 +37,9 @@ test=
 	haml -f html5 -t ugly $< $@
 HAML = $(wildcard $(TEMPLATE_DIR_PATH)/*.haml $(GAE_DIR)/static/*.haml)
 HTML = $(HAML:.haml=.html)
+
+DARTHAML = $(wildcard $(DART_DIR_PATH)/web/*.haml)
+DARTHTML = $(DARTHAML:.haml=.html)
 
 .SUFFIXES: .haml .xhtml
 .haml.xhtml:
@@ -123,7 +128,15 @@ js: $(JS) $(MINJS) $(TESTACULAR_JS)
 
 css: $(MINCSS) $(CSS)
 
-mo: $(PYMAPPING) $(JSMAPPING) $(POT) $(MO)
+html: $(HTML) $(MOBHTML) $(DARTHTML)
+
+mo: html $(PYMAPPING) $(JSMAPPING) $(POT) $(MO)
+
+discovery_doc:
+	endpointscfg.py get_discovery_doc -a gae -o doc $(shell cd $(GAE_DIR); PYTHONPATH=$$GAE_HOME ./tap/printer.py $(gce))
+
+discovery_lib:
+	endpointscfg.py get_client_lib java -a gae -o doc $(shell cd $(GAE_DIR); PYTHONPATH=$$GAE_HOME ./tap/printer.py $(gce))
 
 
 $(GAE_LIB_DIR):
@@ -163,7 +176,7 @@ testacular: js
 	PHANTOMJS_BIN=$(BIN_PHANTOMJS) $(BIN_TESTACULAR) start $(GAE_DIR)/tests/testacular.conf.js
 
 runserver: $(GAE_LIB_PACKAGES_DIR) template css js $(FANSTATIC_DIR)
-	python2.7 $$GAE_HOME/dev_appserver.py --require_indexes --datastore_path=datastore.db --show_mail_body=yes --host=0.0.0.0 $(GAE_DIR)/app.yaml
+	python2.7 $$GAE_HOME/dev_appserver.py --require_indexes --datastore_path=datastore.db --show_mail_body=yes --host=0.0.0.0 --port=$(PORT) $(GAE_DIR)/app.yaml
 
 deploy: update_frontends update_backends
 
@@ -189,7 +202,7 @@ watchlion:
 	PYTHONPATH=$$GAE_HOME watchlion
 
 shell:
-	@cd $(GAE_DIR); PYTHONPATH=$$GAE_HOME ./tap/shell.py
+	@cd $(GAE_DIR); PYTHONPATH=$$GAE_HOME PYTHONSTARTUP=./tap/shell.py ipython -c "%doctest_mode" -i
 
 doc:
 	cd doc; PYTHONPATH=$$GAE_HOME make html
