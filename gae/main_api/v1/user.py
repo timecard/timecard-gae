@@ -47,7 +47,7 @@ class Me(tap.endpoints.CRUDService):
       language  = entity.language,
     ))
 
-  @endpoints.method(message.UserRequest, message.UserResponse)
+  @endpoints.method(message.UserRequestNew, message.UserResponse)
   @ndb.toplevel
   @rate_limit
   def create(self, request):

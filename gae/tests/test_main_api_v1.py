@@ -24,6 +24,7 @@ class AppTest(tests.util.TestCase):
       "key": "1C",
       "name": "me",
     }, status=404)
+    self.app.post_json(self.endpoints_uri("Me.create"), {}, status=400)
     self.app.post_json(self.endpoints_uri("Me.create"), {
       "name": "me",
     })
