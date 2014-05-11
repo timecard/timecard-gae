@@ -28,6 +28,9 @@ class AppTest(tests.util.TestCase):
     self.app.post_json(self.endpoints_uri("Me.create"), {
       "name": "me",
     })
+    self.app.post_json(self.endpoints_uri("Me.create"), {
+      "name": "me",
+    }, status=403)
     response = self.app.post_json(self.endpoints_uri("Me.get"))
     assert response.json == {u'key': u'1C', u'language': u'en', u'name': u'me'}
     response = self.app.post_json(self.endpoints_uri("Me.update"), {
@@ -82,7 +85,7 @@ class AppTest(tests.util.TestCase):
     self.app.post_json(self.endpoints_uri("Me.delete"), {
       "key": "1C",
       "name": u"日本語",
-    })
+    }, status=200)
     response = self.app.post_json(self.endpoints_uri("User.search"), {
       "query": u"日本語",
     })
