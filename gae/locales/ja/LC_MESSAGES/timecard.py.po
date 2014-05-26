@@ -34,83 +34,14 @@ msgstr "閉じる"
 msgid "send feedback"
 msgstr "フィードバックを送信"
 
-#: gae/templates/base_timecard_with_session.html:8
-msgid "Projects"
-msgstr "プロジェクト"
-
-#: gae/templates/base_timecard_with_session.html:14
-msgid "Me"
-msgstr "自分"
-
-#: gae/templates/base_timecard_with_session.html:22
-msgid "Account settings"
-msgstr "アカウント設定"
-
-#: gae/templates/base_timecard_with_session.html:25
-msgid "Logout"
-msgstr "ログアウト"
-
-#: gae/templates/base_timecard_with_session.html:36
-msgid "Login"
-msgstr "ログイン"
-
-#: gae/templates/index.html:11
+#: gae/templates/index.html:10
 msgid "Time tracking for your project."
 msgstr "プロジェクトの時間を追跡する。"
 
-#: gae/templates/index.html:15
-msgid "Sign in with Google"
-msgstr "Googleでサインイン"
-
-#: gae/templates/index.html:18 gae/templates/settings.html:31
-msgid "Sign in with Github"
-msgstr "Githubでサインイン"
-
-#: gae/templates/index.html:21 gae/templates/settings.html:37
-msgid "Sign in with Ruffnote"
-msgstr "Ruffnoteでサインイン"
-
-#: gae/templates/index.html:27
+#: gae/templates/index.html:20
 msgid "It is possible to time tracking in connection with the Github Issue."
 msgstr "Githubチケットと連動したタイムトラッキングが可能です。"
 
-#: gae/templates/index.html:30
+#: gae/templates/index.html:23
 msgid "Project owner can see at a glance the working hours of project members."
 msgstr "プロジェクトオーナーは、一目でメンバーの労働時間を把握できます。"
-
-#: gae/templates/sample.html:20
-msgid "Boa"
-msgstr ""
-
-#: gae/templates/sample.html:21
-msgid "Cobra"
-msgstr ""
-
-#: gae/templates/settings.html:6
-msgid "Edit User"
-msgstr "ユーザーを編集"
-
-#: gae/templates/settings.html:9
-msgid "Name"
-msgstr "名前"
-
-#: gae/templates/settings.html:11
-msgid "Language"
-msgstr "言語"
-
-#: gae/templates/settings.html:23
-msgid "Update"
-msgstr "設定"
-
-#: gae/templates/settings.html:25
-msgid "Service"
-msgstr "サービス"
-
-#: gae/templates/settings.html:40 gae/templates/settings.html:43
-msgid "Cancel my account"
-msgstr "アカウントを削除"
-
-#: gae/templates/settings.html:41
-msgid "Unhappy?"
-msgstr ""
-
