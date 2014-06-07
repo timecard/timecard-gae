@@ -1,6 +1,9 @@
 timecard-gae
 ============
 
+.. image:: https://travis-ci.org/MiCHiLU/timecard-gae.svg?branch=master
+    :target: https://travis-ci.org/MiCHiLU/timecard-gae
+
 It is re-implement the Timecard (http://timecard-rails.herokuapp.com/) by Google App Engine / Python.
 Only implements API via Google Cloud Endpoints.
 
