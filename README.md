@@ -29,6 +29,13 @@ If you want to set other path, define `GAE_PATH` in Makefile as below:
 
     GAE_PATH=<path to your gae>
 
+Docker
+------
+
+or, Quickly set up environment via Docker:
+
+    $ docker pull michilu/fedora-timecard-gae
+
 Build and Test
 --------------
 
