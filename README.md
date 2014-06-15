@@ -16,6 +16,7 @@ Set up
     $ mkvirtualenv --python=`which ptyhon2.7` timecard-gae
     (timecard-gae)$ pip install -r packages.txt
     (timecard-gae)$ pip install -r packages-gae.txt
+    (timecard-gae)$ pip install -r packages-lxml.txt
 
 Set environ
 -----------
