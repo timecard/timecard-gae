@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "tap/base.html" %}
 {% set title = "Timecard" %}
 {% set description = title %}
 {% set domain = "timecard-gae.appspot.com" %}
@@ -15,6 +15,15 @@
         %span.icon-bar
         %span.icon-bar
       %a.navbar-brand{"data-no-turbolink" => "1", :href => "/"} Timecard
-    {% block nav %}{% endblock nav %}
+    {% block nav %}
+    .collapse.navbar-collapse.navbar-ex1-collapse
+      %ul.nav.navbar-nav.navbar-right
+        {% for value, key in language_list %}
+        {% if value != LANGUAGE %}
+        %li
+          %a(href="?l={{ value }}") {{ key }}
+        {% endif %}
+        {% endfor %}
+    {% endblock nav %}
 {% block content %}{% endblock content %}
 {% endblock main %}

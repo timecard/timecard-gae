@@ -1,6 +1,5 @@
-{% extends "base_timecard_with_session.html" %}
+{% extends "base_timecard.html" %}
 {% block content %}
-{% if not user %}
 .container
   .row
     .col-lg-12.col-md-12
@@ -10,16 +9,11 @@
           %p.lead
             {{ _("Time tracking for your project.") }}
           .row(style="padding:20px 0;")
-            .col-md-3.col-md-offset-2
-              %a.btn.btn-primary.btn-block(href="{{ USERS.create_login_url() }}") {{ _("Sign in with Google") }}
-            .col-md-3
-              %a.btn.btn-default.btn-block.disabled(href="{{ USERS.create_login_url('github') }}") {{ _("Sign in with Github") }}
-            .col-md-3
-              %a.btn.btn-default.btn-block.disabled(href="{{ USERS.create_login_url('ruffnote') }}") {{ _("Sign in with Ruffnote") }}
+            .col
+              &nbsp;
         %section
           %h2(style="color:#555555; font-weight:normal;")
             {{ _("It is possible to time tracking in connection with the Github Issue.") }}
           %h2(style="color:#555555; font-weight:normal;")
             {{ _("Project owner can see at a glance the working hours of project members.") }}
-{% endif %}
 {% endblock content %}

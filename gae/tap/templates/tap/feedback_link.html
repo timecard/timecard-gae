@@ -1,0 +1,4 @@
+{% if FEEDBACK_FORMKEY %}
+{% if not gettext %}{% set gettext = NULL_GETTEXT %}{%set _ = NULL_GETTEXT %}{% endif %}
+<a data-target='#feedback' data-toggle='modal'>{{ _("feedback") }}</a>
+{% endif %}

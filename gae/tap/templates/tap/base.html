@@ -1,0 +1,67 @@
+{% import "version.html" as VERSION %}
+{% import "tap/version.html" as TAP_VERSION %}
+{% import "tap/versions.html" as VERSIONS %}
+<meta charset='UTF-8'>
+{% block ngCloak %}
+<style>[ng-cloak] {display: none;}</style>
+{% endblock ngCloak %}
+<title>{% block title %}{{ title }}{% endblock title %}</title>
+{% block viewport %}
+<meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
+{% endblock viewport %}
+{% block icon %}
+<link href='/static/img/apple-touch-icon.png' rel='apple-touch-icon-precomposed'>
+{% endblock icon %}
+{% block og %}
+<meta content='https://{{ domain }}/static/img/apple-touch-icon.png' property='og:image'>
+<meta content='{{ title }}' property='og:title'>
+<meta content='{{ description }}' property='og:description'>
+<meta content='website' property='og:type'>
+<meta content='https://{{ domain }}/' property='og:url'>
+{% endblock og %}
+{% block fb %}
+<meta content='{{ fb_app_id }}' property='fb:app_id'>
+{% endblock fb %}
+{% if I18N %}
+<script>
+window.gettext=function(t){return t},window.ngettext=function(t,n,e){return 1===e?t:n};
+</script>
+<script src="{{ URI_FOR('I18Njs', domain=I18N_DOMAIN, language=LANGUAGE) }}"></script>
+{% endif %}
+{% block utils_js %}
+<script src='/static/tap/js/utils{% if not DEBUG %}.min{% endif %}.js'></script>
+{% endblock utils_js %}
+{% block head %}{% endblock head %}
+{% include "tap/ads/analytics.html" %}
+{% block body %}
+<body>
+{% block main %}
+<h1>{{ title }}</h1>
+{% endblock main %}
+{% if more %}
+<ul class='pager'>
+<li class='next'>
+<a class='btn' href='?{{ cursor.to_websafe_string() }}'>
+Next
+<i class='icon-arrow-right'></i>
+</a>
+</li>
+</ul>
+{% endif %}
+{% block footer %}
+<footer style='margin-top:100px;'>
+<div style='text-align:center;'>
+{% if title %}
+&copy;<a href='//{{ domain }}{{ base_path }}' title='{{ title }}'>{{ title }}</a>&nbsp;{{ since }}
+{% endif %}
+<span class='text-muted'>{% block version %}{{ VERSIONS }}{% endblock version %}</span>
+{% block feedback_link %}
+{% include "tap/feedback_link.html" %}
+{% endblock feedback_link %}
+</div>
+</footer>
+{% block feedback_form %}
+{% include "tap/feedback_form.html" %}
+{% endblock feedback_form %}
+{% endblock footer %}
+{% endblock body %}
