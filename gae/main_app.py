@@ -1,17 +1,19 @@
 from datetime import datetime
 
 import logging
-import utils
+import tap
 
 from google.appengine.ext import ndb
-from js.angular import angular
-from js.bootstrap import bootstrap
 import webapp2
 
-import main_api_v1 as api
+from main_api.v1 import api
+from main_api.v1 import user as api_user
 import main_model as model
 
-class BaseHandler(utils.RequestHandler):
+angular = "js.angular.angular"
+bootstrap = "js.bootstrap.bootstrap"
+
+class BaseHandler(tap.RequestHandler):
   i18n = True
   i18n_domain = "timecard"
   language_list = model.LANGUAGE_CHOICES
@@ -31,16 +33,16 @@ class BaseHandler(utils.RequestHandler):
     raise ndb.Return("en")
 
 class Index(BaseHandler):
-  @utils.head(angular, bootstrap)
-  @utils.session_read_only
+  @tap.head(angular, bootstrap)
+  @tap.session_read_only
   def get(self):
     language_list = self.language_list
     self.render_response("index.html", locals())
 
 class Settings(BaseHandler):
-  @utils.head(angular, bootstrap)
-  @utils.csrf
-  @utils.session
+  @tap.head(angular, bootstrap)
+  @tap.csrf
+  @tap.session
   def get(self):
     user = self.users.get_current_user()
     if user is not None:
@@ -53,9 +55,9 @@ class Settings(BaseHandler):
     language_list = self.language_list
     self.render_response("settings.html", locals())
 
-  @utils.head(angular, bootstrap)
-  @utils.csrf
-  @utils.session
+  @tap.head(angular, bootstrap)
+  @tap.csrf
+  @tap.session
   def post(self):
     user = self.users.get_current_user()
     if user is not None:
@@ -66,7 +68,7 @@ class Settings(BaseHandler):
       if language is not None:
         user.language = language
       user.set_to_session(self.session)
-      future = api.user_store(user)
+      future = api_user.store(user)
       if future.check_success():
         logging.error(future.get_exception())
         self.abort(500)

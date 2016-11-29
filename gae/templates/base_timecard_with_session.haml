@@ -19,7 +19,7 @@
       %a(href="{{ USERS.create_logout_url() }}") {{ _("Logout") }}
     {% else %}
     {% for value, key in language_list %}
-    {% if value != language %}
+    {% if value != LANGUAGE %}
     %li
       %a(href="?l={{ value }}") {{ key }}
     {% endif %}

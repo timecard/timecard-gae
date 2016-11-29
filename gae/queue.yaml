@@ -3,6 +3,9 @@ queue:
   rate: 500/s
 - name: aws
   rate: 2000/h
+- name: yahoo-japan-jlp-ma
+  rate: 50000/d
+  #http://developer.yahoo.co.jp/webapi/jlp/ma/v1/parse.html
 - name: b1
   rate: 500/s
   target: b1
