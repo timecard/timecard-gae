@@ -4,20 +4,12 @@ from google.appengine.ext import ndb
 
 import main_model_mixin as model_mixin
 
-class ModelBase(ndb.Model):
-  @classmethod
-  def _post_get_hook(cls, key, future):
-    entity = future.get_result()
-    if entity is not None:
-      if hasattr(entity, "set_from_key"):
-        entity.set_from_key()
-
 LANGUAGE_CHOICES = (
   ("en", u"English"),
   ("ja", u"日本語"),
 )
 
-class User(ModelBase, model_mixin.User):
+class User(ndb.Model, model_mixin.User):
   #key
   #user_id = ndb.StringProperty(indexed=True, required=True)
 
@@ -25,7 +17,7 @@ class User(ModelBase, model_mixin.User):
   language = ndb.StringProperty(indexed=False, choices=[value for value, label in LANGUAGE_CHOICES], default=LANGUAGE_CHOICES[0][0])
   #not_do_today = list of Issue
 
-class Project(ModelBase):
+class Project(ndb.Model):
   #key auto
 
   name = ndb.StringProperty(indexed=False, required=True)
@@ -43,7 +35,7 @@ class ArchivedComment(ndb.Model):
   author = ndb.StringProperty(indexed=False, required=True)
   body = ndb.TextProperty(indexed=False, required=True)
 
-class Issue(ModelBase, model_mixin.Issue):
+class Issue(ndb.Model, model_mixin.Issue):
   #key
   #project = ndb.KeyProperty(indexed=True, kind=Project, required=True)
   #will_start_at = ndb.DateTimeProperty(indexed=False, auto_now_add=True)
@@ -57,7 +49,7 @@ class Issue(ModelBase, model_mixin.Issue):
   comment = ndb.LocalStructuredProperty(ArchivedComment, indexed=False, repeated=True, compressed=True)
   #closedしたらCommentを格納する
 
-class WorkLoad(ModelBase, model_mixin.WorkLoad):
+class WorkLoad(ndb.Model, model_mixin.WorkLoad):
   #ユーザーは同時に複数のWorkLoadを作れない
   #key
   ##project = ndb.KeyProperty(indexed=True, kind=Project, required=True)
@@ -70,7 +62,7 @@ class WorkLoad(ModelBase, model_mixin.WorkLoad):
   user = ndb.KeyProperty(indexed=True, kind=User, required=True)
   active = ndb.BooleanProperty(indexed=True, default=True)
 
-class Comment(ModelBase, model_mixin.Comment):
+class Comment(ndb.Model, model_mixin.Comment):
   #key
   ##project = ndb.KeyProperty(indexed=True, kind=Project, required=True)
   #issue = ndb.KeyProperty(indexed=True, kind=Issue, required=True)

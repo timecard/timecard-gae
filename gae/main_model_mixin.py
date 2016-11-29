@@ -8,7 +8,7 @@ import webapp2
 
 class ModelMixinBase(object):
   @webapp2.cached_property
-  def self_parse_key(self):
+  def parsed_key(self):
     return self.__class__.parse_key(self.key)
 
 class User(ModelMixinBase):
@@ -23,8 +23,9 @@ class User(ModelMixinBase):
   def parse_key(cls, key):
     return key.string_id()
 
-  def set_from_key(self):
-    self.user_id = self.key.string_id()
+  @property
+  def user_id(self):
+    return self.parsed_key
 
 class Issue(ModelMixinBase):
   @classmethod
@@ -49,11 +50,20 @@ class Issue(ModelMixinBase):
     )
     return result
 
-  def set_from_key(self):
-    project_key, will_start_at, user = self.__class__.parse_key(self.key)
-    self.project = project_key
-    self.will_start_at = will_start_at
-    self.author = user
+  @property
+  def project_key(self):
+    project_key, _will_start_at, _user = self.parsed_key
+    return project_key
+
+  @property
+  def will_start_at(self):
+    _project_key, will_start_at, _user = self.parsed_key
+    return will_start_at
+
+  @property
+  def user(self):
+    _project_key, _will_start_at, user = self.parsed_key
+    return user
 
 class WorkLoad(ModelMixinBase):
   @classmethod
@@ -98,19 +108,60 @@ class WorkLoad(ModelMixinBase):
     )
     return result
 
-  def set_from_key(self):
+  @property
+  def project(self):
     (
       project_key,
+      _issue_key,
+      _start_at,
+      _project_name,
+      _issue_subject,
+    ) = self.parsed_key
+    return project_key
+
+  @property
+  def issue(self):
+    (
+      _project_key,
       issue_key,
+      _start_at,
+      _project_name,
+      _issue_subject,
+    ) = self.parsed_key
+    return issue_key
+
+  @property
+  def start_at(self):
+    (
+      _project_key,
+      _issue_key,
       start_at,
+      _project_name,
+      _issue_subject,
+    ) = self.parsed_key
+    return start_at
+
+  @property
+  def project_name(self):
+    (
+      _project_key,
+      _issue_key,
+      _start_at,
       project_name,
+      _issue_subject,
+    ) = self.parsed_key
+    return project_name
+
+  @property
+  def issue_subject(self):
+    (
+      _project_key,
+      _issue_key,
+      _start_at,
+      _project_name,
       issue_subject,
-    ) = self.__class__.parse_key(self.key)
-    self.project = project_key
-    self.issue = issue_key
-    self.start_at = start_at
-    self.project_name = project_name
-    self.issue_subject = issue_subject
+    ) = self.parsed_key
+    return issue_subject
 
 class Comment(ModelMixinBase):
   @classmethod
@@ -146,12 +197,27 @@ class Comment(ModelMixinBase):
     )
     return result
 
-  def set_from_key(self):
+  @property
+  def issue(self):
     (
       issue_key,
+      _author_name,
+    ) = self.__class__.parse_key(self.key)
+    return issue_key
+
+  @property
+  def author_name(self):
+    (
+      _issue_key,
       author_name,
     ) = self.__class__.parse_key(self.key)
-    project_key, _will_start_at, _user = self.__class__.parse_key(issue_key)
-    self.issue = issue_key
-    self.author_name = author_name
-    self.project = project_key
+    return author_name
+
+  @property
+  def project(self):
+    (
+      issue_key,
+      _author_name,
+    ) = self.__class__.parse_key(self.key)
+    project_key, _will_start_at, _user = Issue.parse_key(issue_key)
+    return project_key

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-01-04 12:10+0700\n"
+"POT-Creation-Date: 2014-01-10 13:37+0700\n"
 "PO-Revision-Date: 2014-01-04 10:19+0700\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: ja <LL@li.org>\n"
@@ -16,6 +16,23 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 1.3\n"
+
+#: gae/tap/templates/tap/feedback_form.html:8
+#: gae/tap/templates/tap/feedback_link.html:3
+msgid "feedback"
+msgstr "フィードバック"
+
+#: gae/tap/templates/tap/feedback_form.html:11
+msgid "messages..."
+msgstr "メッセージ..."
+
+#: gae/tap/templates/tap/feedback_form.html:16
+msgid "close"
+msgstr "閉じる"
+
+#: gae/tap/templates/tap/feedback_form.html:17
+msgid "send feedback"
+msgstr "フィードバックを送信"
 
 #: gae/templates/base_timecard_with_session.html:8
 msgid "Projects"
@@ -45,11 +62,11 @@ msgstr "プロジェクトの時間を追跡する。"
 msgid "Sign in with Google"
 msgstr "Googleでサインイン"
 
-#: gae/templates/index.html:18 gae/templates/settings.html:30
+#: gae/templates/index.html:18 gae/templates/settings.html:31
 msgid "Sign in with Github"
 msgstr "Githubでサインイン"
 
-#: gae/templates/index.html:21 gae/templates/settings.html:36
+#: gae/templates/index.html:21 gae/templates/settings.html:37
 msgid "Sign in with Ruffnote"
 msgstr "Ruffnoteでサインイン"
 
@@ -61,11 +78,11 @@ msgstr "Githubチケットと連動したタイムトラッキングが可能で
 msgid "Project owner can see at a glance the working hours of project members."
 msgstr "プロジェクトオーナーは、一目でメンバーの労働時間を把握できます。"
 
-#: gae/templates/sample.html:15
+#: gae/templates/sample.html:20
 msgid "Boa"
 msgstr ""
 
-#: gae/templates/sample.html:16
+#: gae/templates/sample.html:21
 msgid "Cobra"
 msgstr ""
 
@@ -81,39 +98,19 @@ msgstr "名前"
 msgid "Language"
 msgstr "言語"
 
-#: gae/templates/settings.html:22
+#: gae/templates/settings.html:23
 msgid "Update"
 msgstr "設定"
 
-#: gae/templates/settings.html:24
+#: gae/templates/settings.html:25
 msgid "Service"
 msgstr "サービス"
 
-#: gae/templates/settings.html:39 gae/templates/settings.html:42
+#: gae/templates/settings.html:40 gae/templates/settings.html:43
 msgid "Cancel my account"
 msgstr "アカウントを削除"
 
-#: gae/templates/settings.html:40
+#: gae/templates/settings.html:41
 msgid "Unhappy?"
 msgstr ""
-
-#: gae/templates/admin/feedback.html:8 gae/templates/admin/feedback.html:22
-#: gae/templates/admin/feedback_form.html:8
-#: gae/templates/admin/feedback_link.html:3
-msgid "feedback"
-msgstr "フィードバック"
-
-#: gae/templates/admin/feedback.html:16
-#: gae/templates/admin/feedback_form.html:16
-msgid "close"
-msgstr "閉じる"
-
-#: gae/templates/admin/feedback.html:17
-#: gae/templates/admin/feedback_form.html:17
-msgid "send feedback"
-msgstr "フィードバックを送信"
-
-#: gae/templates/admin/feedback_form.html:11
-msgid "messages..."
-msgstr "メッセージ..."
 

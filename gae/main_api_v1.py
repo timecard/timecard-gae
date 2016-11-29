@@ -4,6 +4,7 @@ from protorpc import (
   remote,
 )
 import endpoints
+import tap.endpoints
 
 import main_model as model
 import main_message as message
@@ -29,14 +30,13 @@ class User(remote.Service):
     items = list()
     entities = yield model.User.query().fetch_async()
     for user in entities:
-      user.set_from_key() #TODO
       items.append(message.UserSend(user_id=user.user_id, name=user.name))
     raise ndb.Return(message.UserSendCollection(items=items))
 
   @endpoints.method(message.UserReceive, message.UserSend)
   @ndb.synctasklet
   def create(self, request):
-    session_user = utils.get_user_from_endpoints_service(self)
+    session_user = tap.endpoints.get_user_from_endpoints_service(self)
     key = ndb.Key(model.User, session_user.user_id())
     user = yield key.get_async()
     if user is not None:

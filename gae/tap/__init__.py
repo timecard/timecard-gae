@@ -44,17 +44,20 @@ from google.appengine.ext import deferred, ndb, zipserve
 from google.appengine.ext.appstats import recording
 from google.appengine.runtime import apiproxy_errors
 
+from . import warmup
+
 
 # Global
 
 AHEAD_HTML5 = "<!DOCTYPE html>\n<html>"
-DIRNAME = os.path.dirname(__file__)
 EMAIL_TRIM_SIZE = 0x3000 #12kB
 MAX_URLFETCH_DEADLINE = 60
 NAMESPACE_KEY = "NAMESPACE"
 RE_JS_Comments = re.compile(r"//.*$")
 RE_JS_MultiLineComments = re.compile(r"/\*.*\*/", re.DOTALL)
+ROOT_DIR_PATH = os.path.abspath(os.path.curdir)
 TASKQUEUE_MAXSIZE = 1000
+_ = gettext.gettext
 _memoize_cache = dict()
 
 
@@ -66,7 +69,7 @@ class ConfigDefaults(object):
     "localhost": (("/sample", "app_sample"),),
   }
   APPSTATS_INCLUDE_ERROR_STATUS = True
-  ASSOCIATE_TAG = "gogom-22"
+  ASSOCIATE_TAG = "gaetap-22"
   BACKENDS_NAME = "b1"
   BANG_REDIRECTOR = "http://goo.gl/"
   CORS_Access_Control_Max_Age = "3628800" # 30d
@@ -87,17 +90,18 @@ class ConfigDefaults(object):
   I18N_TRANSLATIONS_PATH = "locales"
   IMAGE_URL = ""
   IS_TEST = "unittest" in sys.modules.keys()
-  JINJA2_COMPILED_PATH = "site-packages/templates_compiled.zip"
-  JINJA2_TEMPLATE_PATH = ("templates",)
+  JINJA2_COMPILED_PATH = ("site-packages/tap_templates_compiled.zip", "site-packages/templates_compiled.zip")
+  JINJA2_TEMPLATE_PATH = ("tap/templates", "templates")
+  JINJA2_FORCE_COMPILED = True
   JOB_EMAIL_RECIPIENT = None
   MEDIA_URL = ""
   RESPONSE_CACHE_SIZE = 0x10000 # 65536
   ROUTES = (
-    (r"^/sitemap[^/]+\.xml$", "utils.Sitemap"),
-    (r"^/_ah/(start|stop|warmup)$", "utils.Dummy"),
-    (r"^/_tap/generate_sitemap$", "utils.GenerateSitemap"),
-    (r"^/_tap/maintain_response$", "utils.MaintainResponse"),
-    (r"^/_tap/response_cache$", "utils.ResponseCache"),
+    (r"^/sitemap[^/]+\.xml$", "tap.Sitemap"),
+    (r"^/_ah/(start|stop|warmup)$", "tap.Dummy"),
+    (r"^/_tap/generate_sitemap$", "tap.GenerateSitemap"),
+    (r"^/_tap/maintain_response$", "tap.MaintainResponse"),
+    (r"^/_tap/response_cache$", "tap.ResponseCache"),
   )
   SECRET_KEY = None
   SESSION_MAX_AGE = 3600 # 1h
@@ -107,10 +111,8 @@ class ConfigDefaults(object):
   WAIT_MAP_SIZE = 10
   WEBAPP2_CONFIG = None
 config = lib_config.register("config", ConfigDefaults.__dict__)
-config.LOCALE_PATH = os.path.join(DIRNAME, config.I18N_TRANSLATIONS_PATH)
+config.LOCALE_PATH = os.path.join(ROOT_DIR_PATH, config.I18N_TRANSLATIONS_PATH)
 
-
-# Search Path
 
 def execute_once(func):
   @wraps(func)
@@ -122,48 +124,9 @@ def execute_once(func):
     return _result[0]
   return inner
 
-@execute_once
-def sys_path_append():
-  try:
-    import __main__ as main
-  except ImportError:
-    is_shell = False
-  else:
-    is_shell = not hasattr(main, "__file__")
-  base_path = config.SITE_PACKAGES
-  if config.IS_TEST or is_shell:
-    base_path = os.path.abspath(base_path)
-  path = base_path
-  if path not in sys.path and os.path.exists(path):
-    sys.path.append(path)
-  if os.path.exists(base_path):
-    path = os.path.join(base_path, "packages")
-    if path not in sys.path:
-      sys.path.append(path)
-    if os.path.exists(path):
-      for zipfile in os.listdir(path):
-        if zipfile.endswith(".zip"):
-          zipfile_path = os.path.join(path, zipfile)
-          if zipfile_path not in sys.path:
-            sys.path.append(zipfile_path)
-  if is_shell or sys.argv[0].endswith("/sphinx-build"):
-    import google
-    base = os.path.join(os.path.dirname(google.__file__), "../lib/")
-    for webapp2 in ["webapp2-2.5.2", "webapp2"]:
-      path = os.path.join(base, webapp2)
-      if os.path.exists(path):
-        sys.path.append(path)
-        break
-    for path in ["endpoints-1.0", "protorpc-1.0", "jinja2"]:
-      sys.path.append(os.path.join(base, path))
-  elif config.IS_TEST:
-    import google
-    base = os.path.join(os.path.dirname(google.__file__), "../lib/")
-    for path in ["endpoints-1.0"]:
-      sys.path.append(os.path.join(base, path))
-  return True
-sys_path_append()
 
+from django.utils.crypto import get_random_string
+from django.utils.functional import memoize as _memoize
 from gdata.spreadsheet.service import SpreadsheetsService
 from webapp2_extras import jinja2, routes, security, sessions
 import gdata.alt.appengine
@@ -192,25 +155,6 @@ def logging_exception_traceback(func):
       logging.error(traceback.format_exc())
       raise
 
-  return wrapper
-
-def _memoize(func, cache, num_args):
-  """ Copied django.utils.functional.memoize
-
-  Wrap a function so that results for any argument tuple are stored in
-  'cache'. Note that the args to the function must be usable as dictionary
-  keys.
-
-  Only the first num_args are considered when creating the key.
-  """
-  @wraps(func)
-  def wrapper(*args):
-    mem_args = args[:num_args]
-    if mem_args in cache:
-      return cache[mem_args]
-    result = func(*args)
-    cache[mem_args] = result
-    return result
   return wrapper
 
 def memoize(num_args=None, use_memcache=False):
@@ -354,65 +298,6 @@ def on_namespace(namespace):
     namespace_manager.set_namespace(old_namespace)
 
 
-# Functions (copied from Django 1.4)
-
-# Use the system PRNG if possible
-try:
-    random = random.SystemRandom()
-    using_sysrandom = True
-except NotImplementedError:
-    import warnings
-    warnings.warn('A secure pseudo-random number generator is not available '
-                  'on your system. Falling back to Mersenne Twister.')
-    using_sysrandom = False
-
-def salted_hmac(key_salt, value, secret=None):
-    """
-    Returns the HMAC-SHA1 of 'value', using a key generated from key_salt and a
-    secret (which defaults to utils.config.SECRET_KEY).
-
-    A different key_salt should be passed in for every application of HMAC.
-    """
-    if secret is None:
-        secret = config.SECRET_KEY
-
-    # We need to generate a derived key from our base key.  We can do this by
-    # passing the key_salt and our base key through a pseudo-random function and
-    # SHA1 works nicely.
-    key = hashlib.sha1(key_salt + secret).digest()
-
-    # If len(key_salt + secret) > sha_constructor().block_size, the above
-    # line is redundant and could be replaced by key = key_salt + secret, since
-    # the hmac module does the same thing for keys longer than the block size.
-    # However, we need to ensure that we *always* do this.
-    return hmac.new(key, msg=value, digestmod=hashlib.sha1)
-
-def get_random_string(length=12,
-                      allowed_chars='abcdefghijklmnopqrstuvwxyz'
-                                    'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'):
-    """
-    Returns a securely generated random string.
-
-    The default length of 12 with the a-z, A-Z, 0-9 character set returns
-    a 71-bit value. log_2((26+26+10)^12) =~ 71 bits
-    """
-    if not using_sysrandom:
-        # This is ugly, and a hack, but it makes things better than
-        # the alternative of predictability. This re-seeds the PRNG
-        # using a value that is hard for an attacker to predict, every
-        # time a random string is required. This may change the
-        # properties of the chosen random sequence slightly, but this
-        # is better than absolute predictability.
-        random.seed(
-            hashlib.sha256(
-                "%s%s%s" % (
-                    random.getstate(),
-                    time.time(),
-                    config.SECRET_KEY)
-                ).digest())
-    return ''.join([random.choice(allowed_chars) for i in range(length)])
-
-
 # Functions
 
 def base_encode(alphabet, num):
@@ -481,9 +366,10 @@ def get_app():
   config_dict = config_to_dict(config)
   config_dict.update({
     "webapp2_extras.jinja2": {
-      "compiled_path": os.path.join(DIRNAME, config.JINJA2_COMPILED_PATH),
-      "template_path": tuple([os.path.join(DIRNAME, path) for path in config.JINJA2_TEMPLATE_PATH]),
+      "compiled_path": tuple([os.path.join(ROOT_DIR_PATH, path) for path in config.JINJA2_COMPILED_PATH]),
+      "template_path": tuple([os.path.join(ROOT_DIR_PATH, path) for path in config.JINJA2_TEMPLATE_PATH]),
       "environment_args": {"extensions": ["jinja2.ext.i18n"]},
+      "force_compiled": config.JINJA2_FORCE_COMPILED,
     },
     "webapp2_extras.sessions": {
       "cookie_name": "__s",
@@ -497,9 +383,10 @@ def get_app():
   routes_list = list()
   routes_list.extend(config.ROUTES)
   routes_list.extend((
-    webapp2.Route("/oauth/signout", handler="utils.OAuth:_signout", name="oauth_signout"),
-    webapp2.Route("/oauth/<provider>", handler="utils.OAuth:_simple_auth", name="oauth_signin"),
-    webapp2.Route("/oauth/<provider>/callback", handler="utils.OAuth:_auth_callback", name="oauth_callback"),
+    webapp2.Route("/oauth/signout", handler="tap.OAuth:_signout", name="oauth_signout"),
+    webapp2.Route("/oauth/<provider>", handler="tap.OAuth:_simple_auth", name="oauth_signin"),
+    webapp2.Route("/oauth/<provider>/callback", handler="tap.OAuth:_auth_callback", name="oauth_callback"),
+    webapp2.Route("/_tap/i18n/<domain>.<language>.js", "tap.I18Njs", name="I18Njs"),
   ))
   if config.BANG_REDIRECTOR:
     routes_list.append(webapp2.Route("/!<key:[^/]+>", BangRedirector, name="bang-redirector"))
@@ -690,7 +577,7 @@ class Jinja2Factory(jinja2.Jinja2):
     if "loader" not in kwargs:
       template_path = jinja2_config["template_path"]
       compiled_path = jinja2_config["compiled_path"]
-      use_compiled = not app.debug or jinja2_config["force_compiled"]
+      use_compiled = jinja2_config["force_compiled"]
 
       if compiled_path and use_compiled:
         kwargs["loader"] = jinja2.jinja2.ModuleLoader(compiled_path)
@@ -1349,12 +1236,12 @@ class RequestHandler(webapp2.RequestHandler, GoogleAnalyticsMixin):
       super(RequestHandler, self).dispatch()
     except webob.exc.HTTPGone:
       self.error(410)
-      message = u"見つかりませんでした。トップページを表示しています。"
+      message = _(u"Not found. Display the top page.")
     except apiproxy_errors.OverQuotaError:
       if self.is_bot:
         self.abort(503, headers=[("Retry-After", "86400")])
       self.response.set_status(500, "Status: 503 Service Unavailabl")
-      message = u"サーバーエラーが発生しました。トップページを表示しています。"
+      message = _(u"Sorry, a server error has occurred. Display the top page.")
     except Exception as e:
       if config.DEBUG:
         raise
@@ -1363,7 +1250,7 @@ class RequestHandler(webapp2.RequestHandler, GoogleAnalyticsMixin):
       logging.error("{0}: {1}".format(e.__class__.__name__, e))
       send_exception_report()
       self.error(500)
-      message = u"サーバーエラーが発生しました。トップページを表示しています。"
+      message = _(u"Sorry, a server error has occurred. Display the top page.")
     else:
       if (200 <= self.response.status_int < 400
           and config.GA_ACCOUNT
@@ -1378,10 +1265,12 @@ class RequestHandler(webapp2.RequestHandler, GoogleAnalyticsMixin):
         message = zenhan.z2he(message)
       message = message.encode("Shift_JIS", "xmlcharrefreplace")
       index = "/index.html"
-      template_path = "mob/error.xhtml"
+      template_path = "tap/mob/error.xhtml"
     else:
       index = "/"
-      template_path = "error.html"
+      template_path = "tap/error.html"
+      self.i18n = True
+      self.i18n_domain = "tap"
       self.response.write(AHEAD_HTML5)
       try:
         from js.bootstrap import bootstrap
@@ -1536,8 +1425,9 @@ class RequestHandler(webapp2.RequestHandler, GoogleAnalyticsMixin):
     for key, value in context.items():
       dictionary.setdefault(key, value)
     if self.i18n:
-      dictionary["language"] = self.language
-      dictionary["translation"] = get_translation("{0}.js".format(self.i18n_domain), (self.language,), False, "json")
+      dictionary["I18N"] = True
+      dictionary["I18N_DOMAIN"] = self.i18n_domain
+      dictionary["LANGUAGE"] = self.language
     if "self" in dictionary:
       del dictionary["self"]
     body = self.jinja2.render_template(template_path, **dictionary)
@@ -1613,7 +1503,7 @@ def bang_redirector_for(key):
   try:
     return webapp2.uri_for("bang-redirector", key=key, _full=True).replace("/%21", "/!", 1)
   except AssertionError:
-    logging.info("utils.bang_redirector_for: Could not be retrieved URI for `{0}`.".format(key))
+    logging.info("tap.bang_redirector_for: Could not be retrieved URI for `{0}`.".format(key))
     raise
 
 class BangRedirector(RequestHandler):
@@ -1769,7 +1659,7 @@ class ResponseCache(RequestHandler):
       cache_key = self.to_cache_key("".join((host, path)))
       template_args.append(cache_key)
     app_id = app_identity.get_application_id()
-    self.render_response("admin/response_cache.html",
+    self.render_response("tap/response_cache.html",
                          args=template_args + [host, path, app_id])
 
   @head(angular, bootstrap)
@@ -1790,8 +1680,17 @@ class ResponseCache(RequestHandler):
           break
     app_id = app_identity.get_application_id()
     message = "Deleted the key from caches."
-    self.render_response("admin/response_cache.html",
+    self.render_response("tap/response_cache.html",
                          args=template_args + [host, path, app_id, message])
+
+
+# i18n.js views
+
+class I18Njs(RequestHandler):
+  @cache(60)
+  def get(self, domain, language):
+    translation = get_translation("{0}.js".format(domain), (language,), False, "json")
+    self.render_response("tap/i18n_js.html", args=[translation], mimetype="text/javascript")
 
 
 # cron job views
